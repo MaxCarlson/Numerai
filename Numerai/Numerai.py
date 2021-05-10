@@ -26,9 +26,13 @@ NAPI = numerapi.NumerAPI(verbosity="info")
 DIR = "./data/"
 NAPI.download_current_dataset(dest_path=DIR, unzip=True)
 
+def printCorrelation(df):
+    corr_matrix = df.corr()
+    print(corr_matrix['target'].sort_values(ascending=False))
+
 class AutoEncoder():
     lr = 0.01
-    epochs = 15
+    epochs = 1
     stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss",
         patience=2,
@@ -46,7 +50,7 @@ class AutoEncoder():
         #self.model.add(layers.Dense(196, activation='tanh'))
         self.model.add(layers.Dense(128, activation='tanh'))
         self.model.add(layers.Dense(64, activation='tanh'))
-        self.model.add(layers.Dense(32, activation='tanh'))
+        self.model.add(layers.Dense(32, activation='tanh', name='OutputLayer'))
         self.model.add(layers.Dense(64, activation='tanh'))
         self.model.add(layers.Dense(128, activation='tanh'))
         #self.model.add(layers.Dense(196, activation='tanh'))
@@ -61,6 +65,14 @@ class AutoEncoder():
         history = self.model.fit(x=data[:,:-1], y=data[:,:-1], epochs=self.epochs, 
                                  batch_size=128, validation_split=0.15, shuffle=True, 
                                  callbacks=[self.stopping])
+
+        # Build a model to produce the compressed output from the autoencoder
+        aeOutput = self.model.get_layer(name='OutputLayer').output
+        aeModel  = keras.Model(inputs=self.model.input, outputs=aeOutput)
+        p = aeModel.predict(x=data[:,:-1])
+
+        return p
+        self.model.save(filepath='./autoencoder.h5', overwrite=False, include_optimizer=False)
 
 # Read the csv file into a pandas Dataframe as float16 to save space
 def read_csv(file_path):
@@ -79,10 +91,6 @@ def read_csv(file_path):
     # df = pd.read_csv(file_path, dtype=dtypes, converters=converters)
 
     return df, v
-
-def printCorrelation(df):
-    corr_matrix = df.corr()
-    print(corr_matrix['target'].sort_values(ascending=False))
 
 
 def main():
