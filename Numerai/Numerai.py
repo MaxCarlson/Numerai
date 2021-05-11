@@ -31,8 +31,9 @@ def printCorrelation(df):
     print(corr_matrix['target'].sort_values(ascending=False))
 
 class AutoEncoder():
-    lr = 0.01
-    epochs = 1
+    lr = 0.009
+    epochs = 5
+    batchSize = 128
     stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss",
         patience=2,
@@ -41,21 +42,21 @@ class AutoEncoder():
         restore_best_weights=True)
 
     decay = keras.optimizers.schedules.ExponentialDecay(
-        lr, decay_steps=1, decay_rate=0.75)
+        lr, decay_steps=3400, decay_rate=0.85)
 
     def __init__(self):
         self.model = models.Sequential()
         self.model.add(layers.Dense(310, activation='tanh'))
-        #self.model.add(layers.Dense(256, activation='tanh'))
-        #self.model.add(layers.Dense(196, activation='tanh'))
-        self.model.add(layers.Dense(128, activation='tanh'))
-        self.model.add(layers.Dense(64, activation='tanh'))
-        self.model.add(layers.Dense(32, activation='tanh', name='OutputLayer'))
-        self.model.add(layers.Dense(64, activation='tanh'))
-        self.model.add(layers.Dense(128, activation='tanh'))
-        #self.model.add(layers.Dense(196, activation='tanh'))
-        #self.model.add(layers.Dense(256, activation='tanh'))
-        self.model.add(layers.Dense(310, activation='sigmoid'))
+        self.model.add(layers.Dense(256, activation='tanh'))
+        self.model.add(layers.Dense(196, activation='tanh'))
+        #self.model.add(layers.Dense(128, activation='tanh'))
+        #self.model.add(layers.Dense(64, activation='tanh'))
+        self.model.add(layers.Dense(128, activation='tanh', name='OutputLayer'))
+        #self.model.add(layers.Dense(64, activation='tanh'))
+        #self.model.add(layers.Dense(128, activation='tanh'))
+        self.model.add(layers.Dense(196, activation='tanh'))
+        self.model.add(layers.Dense(256, activation='tanh'))
+        self.model.add(layers.Dense(310, activation='softmax'))
         self.model.compile(optimizer=keras.optimizers.Adam(learning_rate=self.decay), 
               #loss=keras.losses.mean_squared_error,
               loss=keras.losses.binary_crossentropy,
@@ -63,8 +64,13 @@ class AutoEncoder():
 
     def fit(self, data):
         history = self.model.fit(x=data[:,:-1], y=data[:,:-1], epochs=self.epochs, 
-                                 batch_size=128, validation_split=0.15, shuffle=True, 
+                                 batch_size=self.batchSize, validation_split=0.1, shuffle=True, 
                                  callbacks=[self.stopping])
+        
+        # Testing 
+        #history = self.model.fit(x=data[:,:-1], y=data[:,:-1], epochs=1, 
+        #                         batch_size=self.batchSize, shuffle=True, 
+        #                         steps_per_epoch=len(data)//32//self.batchSize)
 
         # Build a model to produce the compressed output from the autoencoder
         aeOutput = self.model.get_layer(name='OutputLayer').output
@@ -72,7 +78,7 @@ class AutoEncoder():
         p = aeModel.predict(x=data[:,:-1])
 
         return p
-        self.model.save(filepath='./autoencoder.h5', overwrite=False, include_optimizer=False)
+        #self.model.save(filepath='./autoencoder.h5', overwrite=False, include_optimizer=False)
 
 # Read the csv file into a pandas Dataframe as float16 to save space
 def read_csv(file_path):
@@ -100,13 +106,17 @@ def main():
     training_data, train = read_csv("data/numerai_dataset_263/numerai_training_data.csv")
     # The tournament data is the data that Numerai uses to evaluate your model.
     #tournament_data = read_csv("data/numerai_dataset_263/numerai_tournament_data.csv")
+    #printCorrelation(training_data)
 
     feature_names = [
         f for f in training_data.columns if f.startswith("feature")
     ]
     print(f"Loaded {len(feature_names)} features")
 
-    ae.fit(train)
+    aeout = ae.fit(train)
+    df = pd.DataFrame(aeout)
+    df['target'] = train[:,-1:]
+    printCorrelation(df)
 
 
 
