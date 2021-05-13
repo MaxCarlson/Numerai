@@ -1,5 +1,13 @@
 # Ideas
+# Maybe add difference in eras as feature?
+
+# Feature Engineering
+# # # # # # # # # # # # 
 # Use autoencoder for feature engineering!
+# Try count-encoding, switch feature value to it's respective frequency of occurance in that feature
+# Some sort of feature selection search?
+# Take only the most highly correlated features? Univariate Feature Selection?
+# Mean/Median/etc of feature catagories
 
 import numerapi
 import numpy as np
@@ -28,11 +36,14 @@ NAPI.download_current_dataset(dest_path=DIR, unzip=True)
 
 def printCorrelation(df):
     corr_matrix = df.corr()
-    print(corr_matrix['target'].sort_values(ascending=False))
+    corr_matrix = corr_matrix['target'].sort_values(ascending=False, method='spearman')
+    print(corr_matrix)
+    return corr_matrix
 
 class AutoEncoder():
+    
     lr = 0.009
-    epochs = 5
+    epochs = 3
     batchSize = 128
     stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss",
@@ -42,9 +53,17 @@ class AutoEncoder():
         restore_best_weights=True)
 
     decay = keras.optimizers.schedules.ExponentialDecay(
-        lr, decay_steps=3400, decay_rate=0.85)
+        lr, decay_steps=3400*2, decay_rate=0.95)
+
+    featureThreshold = 0.01
 
     def __init__(self):
+        # Note: Current best:
+        # 310, 256, 196, 128: lr=0.009, decay_steps=6800, decay_rate=0.95
+        # act=tanh, out=sigmoid, loss=binary_entropy, optimizer=adam
+        # Epochs=3, val_loss=0.606
+        # Features > 0.01: 0.0148, 0.0131
+
         self.model = models.Sequential()
         self.model.add(layers.Dense(310, activation='tanh'))
         self.model.add(layers.Dense(256, activation='tanh'))
@@ -56,7 +75,7 @@ class AutoEncoder():
         #self.model.add(layers.Dense(128, activation='tanh'))
         self.model.add(layers.Dense(196, activation='tanh'))
         self.model.add(layers.Dense(256, activation='tanh'))
-        self.model.add(layers.Dense(310, activation='softmax'))
+        self.model.add(layers.Dense(310, activation='sigmoid'))
         self.model.compile(optimizer=keras.optimizers.Adam(learning_rate=self.decay), 
               #loss=keras.losses.mean_squared_error,
               loss=keras.losses.binary_crossentropy,
@@ -78,7 +97,22 @@ class AutoEncoder():
         p = aeModel.predict(x=data[:,:-1])
 
         return p
-        #self.model.save(filepath='./autoencoder.h5', overwrite=False, include_optimizer=False)
+
+    def findTopOutputs(self, corr_matrix):
+        idxs = []
+        for i in range(1, len(corr_matrix)):
+            if corr_matrix.iloc[i, 1] < self.featureThreshold:
+                break
+            idxs.append(corr_matrix.iloc[i, 0])
+            
+        return i, idxs
+
+    def save(self, corr_matrix):
+        greaterThanBase, idxs = self.findTopOutputs(corr_matrix)
+        self.model.save(filepath=('./aeModels/autoencoder-{}-%s.h5'.format(greaterThanBase, ) % ','.join(idxs))
+                        , overwrite=False, include_optimizer=False)
+
+
 
 # Read the csv file into a pandas Dataframe as float16 to save space
 def read_csv(file_path):
@@ -116,7 +150,9 @@ def main():
     aeout = ae.fit(train)
     df = pd.DataFrame(aeout)
     df['target'] = train[:,-1:]
-    printCorrelation(df)
+    corr_matrix = printCorrelation(df)
+    ae.save(corr_matrix)
+    
 
 
 
