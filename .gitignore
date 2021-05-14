@@ -366,3 +366,5 @@ FodyWeavers.xsd
 /Numerai/example_model.xgb
 /Numerai/data/numerai_dataset_263.zip
 /Numerai/autoencoder.h5
+/Numerai/aeModels/autoencoder-0.423
+/Numerai/aeModels/autoencoder-0.468
