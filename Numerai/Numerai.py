@@ -31,8 +31,8 @@ NAPI = numerapi.NumerAPI(verbosity="info")
 
 
 DIR = "./data/"
-TARGET_NAME = f"target"
-PREDICTION_NAME = f"prediction"
+TARGET_NAME = 'target'
+PREDICTION_NAME = 'prediction'
 
 # Download new data
 NAPI.download_current_dataset(dest_path=DIR, unzip=True)
@@ -51,11 +51,7 @@ def score(df):
 def payout(scores):
     return scores.clip(lower=-0.25, upper=0.25)
 
-def printCorrelation(df):
-    corr_matrix = df.corr()
-    corr_matrix = corr_matrix['target'].sort_values(ascending=False)
-    print(corr_matrix)
-    return corr_matrix
+
 
 class AutoEncoder():
     
@@ -64,7 +60,7 @@ class AutoEncoder():
     batchSize = 128
     stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=2,
+        patience=3,
         mode="auto",
         baseline=None,
         restore_best_weights=True)
@@ -93,16 +89,17 @@ class AutoEncoder():
         self.model.add(layers.Dense(196))
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
-        #self.model.add(layers.Dense(128))
-        #self.model.add(layers.LeakyReLU(alpha=0.3))
-        #self.model.add(layers.BatchNormalization())
-        #self.model.add(layers.Dense(64))
+        self.model.add(layers.Dense(128))
+        self.model.add(layers.LeakyReLU(alpha=0.3))
+        self.model.add(layers.BatchNormalization())
+
         self.model.add(layers.Dense(128, name='OutputLayer'))
         self.model.add(layers.LeakyReLU(alpha=0.3))
-        #self.model.add(layers.BatchNormalization()) ?
-        #self.model.add(layers.Dense(128))
-        #self.model.add(layers.LeakyReLU(alpha=0.3))
-        #self.model.add(layers.BatchNormalization())
+        self.model.add(layers.BatchNormalization())
+        
+        self.model.add(layers.Dense(128))
+        self.model.add(layers.LeakyReLU(alpha=0.3))
+        self.model.add(layers.BatchNormalization())
         self.model.add(layers.Dense(196))
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
@@ -115,60 +112,93 @@ class AutoEncoder():
               loss=keras.losses.binary_crossentropy,
               metrics=[])
 
-    def fit(self, data, val):
+    def fit(self, features, targets, val):
         if False:
             self.model = keras.models.load_model('./aeModels/autoencoder-0.423')
 
         else:
-            hist = self.model.fit(x=data[:,:-1], y=data[:,:-1], epochs=self.epochs, 
+            hist = self.model.fit(x=fetures.values, y=targets.values, epochs=self.epochs, 
                                      batch_size=self.batchSize, #steps_per_epoch=10,
-                                     validation_data=(val, val),
+                                     validation_data=(val.values, val.values),
                                      shuffle=True, callbacks=[self.stopping])
 
-            self.model.save('./aeModels/autoencoder-{}'.format(round(hist.history['val_loss'][-1], 3)))
+            #self.model.save('./aeModels/autoencoder-{}'.format(round(hist.history['val_loss'][-1], 3)))
         aeOutput = self.model.get_layer(name='OutputLayer').output
         self.encoder = keras.Model(inputs=self.model.input, outputs=aeOutput)
 
-    def predict(self, data):
-        p = self.encoder.predict(x=data[:,:-1])
+    def encode(self, features):
+        p = self.encoder.predict(x=features.values)
         return p
 
+    @staticmethod
+    def printCorrelation(aeout, targets):
+        aeout = pd.DataFrame(aeout)
+        aeout[TARGET_NAME] = targets.values
+
+        corr_matrix = aeout.corr()
+        corr_matrix = corr_matrix[TARGET_NAME].sort_values(ascending=False)
+        print(corr_matrix)
+        return corr_matrix
 
 # Read the csv file into a pandas Dataframe as float16 to save space
 def read_csv(file_path):
     with open(file_path, 'r') as f:
         column_names = next(csv.reader(f))
 
-    dtypes = {x: np.float16 for x in column_names if x.startswith(('feature', 'target'))}
+    dtypes = {x: np.float16 for x in column_names if x.startswith(('feature', TARGET_NAME))}
     df = pd.read_csv(file_path, dtype=dtypes, index_col=0)
-    v = df.iloc[1:,2:].to_numpy()
-
-    return df, v
+    return df
 
 
 def main():
     ae = AutoEncoder()
     print("Loading data...")
     # The training data is used to train your model how to predict the targets.
-    training_data, train = read_csv("data/numerai_dataset_263/numerai_training_data.csv")
+    training_data = read_csv("data/numerai_dataset_263/numerai_training_data.csv")
     # The tournament data is the data that Numerai uses to evaluate your model.
-    tournament_data = read_csv("data/numerai_dataset_263/numerai_tournament_data.csv")[0]
+    tournament_data = read_csv("data/numerai_dataset_263/numerai_tournament_data.csv")
     validation_data = tournament_data[tournament_data.data_type == "validation"]
     #printCorrelation(training_data)
 
     feature_names = [
         f for f in training_data.columns if f.startswith("feature")
     ]
-    print("Loaded {len(feature_names)} features")
+    print(f"Loaded {len(feature_names)} features")
 
     #print('Printing features: \n', validation_data[feature_names])
     #print('Printing targets: \n', validation_data['target'])
 
-    ae.fit(train, validation_data[feature_names].values)
-    aeout = ae.predict(train)
-    df = pd.DataFrame(aeout)
-    df['target'] = train[:,-1:]
-    corr_matrix = printCorrelation(df)
+    ae.fit(training_data[feature_names], training_data[TARGET_NAME], validation_data[feature_names])
+    aeoutTrain = ae.encode(training_data[feature_names])
+    aeoutVal = ae.encode(validation_data[feature_names])
+
+
+    train_corr_matrix = AutoEncoder.printCorrelation(aeoutTrain, training_data[TARGET_NAME])
+    valid_corr_matrix = AutoEncoder.printCorrelation(aeoutVal, validation_data[TARGET_NAME])
+
+
+    return
+
+
+    #training_data[PREDICTION_NAME] = model.predict(training_data[feature_names], training_data[TARGET_NAME])
+    #tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names], tournament_data[TARGET_NAME])
+
+    ## Check the per-era correlations on the training set (in sample)
+    #train_correlations = training_data.groupby("era").apply(score)
+    #print(f"On training the correlation has mean {train_correlations.mean()} and std {train_correlations.std(ddof=0)}")
+    #print(f"On training the average per-era payout is {payout(train_correlations).mean()}")
+    #
+    #"""Validation Metrics"""
+    ## Check the per-era correlations on the validation set (out of sample)
+    #validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
+    #validation_correlations = validation_data.groupby("era").apply(score)
+    #print(f"On validation the correlation has mean {validation_correlations.mean()} and "
+    #      f"std {validation_correlations.std(ddof=0)}")
+    #print(f"On validation the average per-era payout is {payout(validation_correlations).mean()}")
+    #
+    ## Check the "sharpe" ratio on the validation set
+    #validation_sharpe = validation_correlations.mean() / validation_correlations.std(ddof=0)
+    #print(f"Validation Sharpe: {validation_sharpe}")
     
 
 
