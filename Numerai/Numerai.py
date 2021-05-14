@@ -30,9 +30,26 @@ session = InteractiveSession(config=config)
 NAPI = numerapi.NumerAPI(verbosity="info")
 
 
-# Download new data
 DIR = "./data/"
+TARGET_NAME = f"target"
+PREDICTION_NAME = f"prediction"
+
+# Download new data
 NAPI.download_current_dataset(dest_path=DIR, unzip=True)
+
+
+# Submissions are scored by spearman correlation
+def correlation(predictions, targets):
+    ranked_preds = predictions.rank(pct=True, method="first")
+    return np.corrcoef(ranked_preds, targets)[0, 1]
+
+# convenience method for scoring
+def score(df):
+    return correlation(df[PREDICTION_NAME], df[TARGET_NAME])
+
+# Payout is just the score cliped at +/-25%
+def payout(scores):
+    return scores.clip(lower=-0.25, upper=0.25)
 
 def printCorrelation(df):
     corr_matrix = df.corr()
@@ -104,8 +121,8 @@ class AutoEncoder():
 
         else:
             hist = self.model.fit(x=data[:,:-1], y=data[:,:-1], epochs=self.epochs, 
-                                     batch_size=self.batchSize, steps_per_epoch=100,
-                                     validation_data=val,
+                                     batch_size=self.batchSize, #steps_per_epoch=10,
+                                     validation_data=(val, val),
                                      shuffle=True, callbacks=[self.stopping])
 
             self.model.save('./aeModels/autoencoder-{}'.format(round(hist.history['val_loss'][-1], 3)))
@@ -126,13 +143,6 @@ def read_csv(file_path):
     df = pd.read_csv(file_path, dtype=dtypes, index_col=0)
     v = df.iloc[1:,2:].to_numpy()
 
-    # Memory constrained? Try this instead (slower, but more memory efficient)
-    # see https://forum.numer.ai/t/saving-memory-with-uint8-features/254
-    # dtypes = {f"target": np.float16}
-    # to_uint8 = lambda x: np.uint8(float(x) * 4)
-    # converters = {x: to_uint8 for x in column_names if x.startswith('feature')}
-    # df = pd.read_csv(file_path, dtype=dtypes, converters=converters)
-
     return df, v
 
 
@@ -149,9 +159,12 @@ def main():
     feature_names = [
         f for f in training_data.columns if f.startswith("feature")
     ]
-    print(f"Loaded {len(feature_names)} features")
+    print("Loaded {len(feature_names)} features")
 
-    ae.fit(train, (validation_data[feature_names], validation_data['target']))
+    #print('Printing features: \n', validation_data[feature_names])
+    #print('Printing targets: \n', validation_data['target'])
+
+    ae.fit(train, validation_data[feature_names].values)
     aeout = ae.predict(train)
     df = pd.DataFrame(aeout)
     df['target'] = train[:,-1:]
