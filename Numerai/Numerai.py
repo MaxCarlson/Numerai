@@ -112,17 +112,17 @@ class AutoEncoder():
               loss=keras.losses.binary_crossentropy,
               metrics=[])
 
-    def fit(self, features, targets, val):
+    def fit(self, features, val):
         if False:
             self.model = keras.models.load_model('./aeModels/autoencoder-0.423')
 
         else:
-            hist = self.model.fit(x=fetures.values, y=targets.values, epochs=self.epochs, 
+            hist = self.model.fit(x=features.values, y=features.values, epochs=self.epochs, 
                                      batch_size=self.batchSize, #steps_per_epoch=10,
                                      validation_data=(val.values, val.values),
                                      shuffle=True, callbacks=[self.stopping])
 
-            #self.model.save('./aeModels/autoencoder-{}'.format(round(hist.history['val_loss'][-1], 3)))
+            self.model.save('./aeModels/autoencoder-{}'.format(round(hist.history['val_loss'][-1], 3)))
         aeOutput = self.model.get_layer(name='OutputLayer').output
         self.encoder = keras.Model(inputs=self.model.input, outputs=aeOutput)
 
@@ -168,7 +168,7 @@ def main():
     #print('Printing features: \n', validation_data[feature_names])
     #print('Printing targets: \n', validation_data['target'])
 
-    ae.fit(training_data[feature_names], training_data[TARGET_NAME], validation_data[feature_names])
+    ae.fit(training_data[feature_names], validation_data[feature_names])
     aeoutTrain = ae.encode(training_data[feature_names])
     aeoutVal = ae.encode(validation_data[feature_names])
 
