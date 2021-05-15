@@ -5,6 +5,8 @@ import tensorflow as tf
 from keras import layers
 from keras import models
 
+MODEL_PATH='./nnModels/'
+
 # TF differentiable correaltion function(s)?
 def correlation_coefficient_loss(y_true, y_pred):
     x = y_true
@@ -29,19 +31,23 @@ def correlation_tf(x, y):
 
 
 class NNModel():
-    lr = 0.001
+    lr = 0.005
     epochs = 100
     batchSize = 128
 
-    stopping = keras.callbacks.EarlyStopping(
+    stopping = K.callbacks.EarlyStopping(
         monitor="val_loss",
         patience=3,
         mode="auto",
         baseline=None,
-        min_delta=0.0001,
+        min_delta=0.005,
         restore_best_weights=True)
 
-    def __init__(self):
+    def __init__(self, name=None):
+        if name:
+             self.model = K.models.load_model(MODEL_PATH + name)
+             return
+
         self.model = models.Sequential()
         self.model.add(layers.Dense(310))
         self.model.add(layers.LeakyReLU(alpha=0.3))
@@ -69,16 +75,16 @@ class NNModel():
         self.model.add(layers.Dropout(0.15))
         self.model.add(layers.Dense(16))
         self.model.add(layers.LeakyReLU(alpha=0.3))
-        #self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
+        self.model.add(layers.BatchNormalization())
+        #self.model.add(layers.Dropout(0.15))
         self.model.add(layers.Dense(8))
         self.model.add(layers.LeakyReLU(alpha=0.3))
-        #self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
+        self.model.add(layers.BatchNormalization())
+        #self.model.add(layers.Dropout(0.15))
         self.model.add(layers.Dense(4))
         self.model.add(layers.LeakyReLU(alpha=0.3))
-        #self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
+        self.model.add(layers.BatchNormalization())
+        #self.model.add(layers.Dropout(0.15))
         self.model.add(layers.Dense(2))
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
@@ -86,20 +92,20 @@ class NNModel():
         self.model.add(layers.Dense(1))
         self.model.add(layers.Activation(K.activations.sigmoid))
 
-        self.model.compile(optimizer=keras.optimizers.Adam(learning_rate=self.lr), 
-              #loss=keras.losses.mean_squared_error,
-              loss=keras.losses.binary_crossentropy,
+        self.model.compile(optimizer=K.optimizers.Adam(learning_rate=self.lr), 
+              #loss=K.losses.mean_squared_error,
+              loss=K.losses.binary_crossentropy,
               metrics=[])
 
 
-        def fit(self, features, val):
-            hist = self.model.fit(x=features.values, y=features.values, epochs=self.epochs, 
-                            batch_size=self.batchSize, #steps_per_epoch=10,
-                            validation_data=(val.values, val.values),
-                            shuffle=True, callbacks=[self.stopping])
+    def fit(self, features, targets, valFeatures, valTargets):
+        hist = self.model.fit(x=features.values, y=targets.values, epochs=self.epochs, 
+                        batch_size=self.batchSize, #steps_per_epoch=10,
+                        validation_data=(valFeatures.values, valTargets.values),
+                        shuffle=True, callbacks=[self.stopping])
 
-            self.model.save('./nnModels/nn-{}'.format(round(hist.history['val_loss'][-1], 3)))
+        self.model.save('./nnModels/nn-{}'.format(round(hist.history['val_loss'][-1], 3)))
 
-        def predict(self, features):
-            p = self.model.predict(x=features.values)
-            return p
+    def predict(self, features):
+        p = self.model.predict(x=features.values)
+        return p
