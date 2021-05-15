@@ -70,7 +70,7 @@ def runAE(training_data, tournament_data, validation_data, feature_names):
 
     train_corr_matrix = AutoEncoder.printCorrelation(aeoutTrain, training_data[TARGET_NAME])
     valid_corr_matrix = AutoEncoder.printCorrelation(aeoutVal, validation_data[TARGET_NAME])
-    return
+
 
 def trainModel(training_data, tournament_data, validation_data, feature_names, modelName=None):
     model = NNModel()
@@ -80,17 +80,13 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
     return model
 
 
-
-
-
-
 if __name__ == "__main__":
     training_data, tournament_data, validation_data, feature_names = loadData()
 
     #runAE()
 
-    model = trainModel(training_data, tournament_data, validation_data, feature_names, 'nn-0.693')
-    #model = trainModel(training_data, tournament_data, validation_data, feature_names)
+    #model = trainModel(training_data, tournament_data, validation_data, feature_names, 'nn-0.693')
+    model = trainModel(training_data, tournament_data, validation_data, feature_names)
 
     validate(training_data, tournament_data, validation_data, feature_names, model)
 

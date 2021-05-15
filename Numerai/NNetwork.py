@@ -45,8 +45,9 @@ class NNModel():
 
     def __init__(self, name=None):
         if name:
-             self.model = K.models.load_model(MODEL_PATH + name)
-             return
+            self.model = K.models.load_model(MODEL_PATH + name)
+            self.model.summary()
+            return
 
         self.model = models.Sequential()
         self.model.add(layers.Dense(310))
@@ -89,7 +90,7 @@ class NNModel():
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
         #self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(128))
+        self.model.add(layers.Dense(1))
         self.model.add(layers.Activation(K.activations.sigmoid))
 
         self.model.compile(optimizer=K.optimizers.Adam(learning_rate=self.lr), 
@@ -97,7 +98,7 @@ class NNModel():
               loss=K.losses.binary_crossentropy,
               metrics=[])
 
-        self.model.summary()
+        #self.model.summary()
 
 
     def fit(self, features, targets, valFeatures, valTargets):

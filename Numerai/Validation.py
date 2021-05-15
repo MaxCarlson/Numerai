@@ -97,6 +97,9 @@ def validate(training_data, tournament_data, validation_data, feature_names, mod
     corr_with_example_preds = per_era_corrs.mean()
     print(f"Corr with example preds: {corr_with_example_preds}")
 
+    #tournament_data[PREDICTION_NAME].to_csv("submission.csv", header=True)
+
+
 # to neutralize a column in a df by many other columns on a per-era basis
 def neutralize(df,
                columns,
