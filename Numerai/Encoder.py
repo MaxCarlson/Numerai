@@ -62,6 +62,9 @@ class AutoEncoder():
               loss=keras.losses.binary_crossentropy,
               metrics=[])
 
+        self.model.summary()
+
+
     def fit(self, features, val):
         if False:
             self.model = keras.models.load_model('./aeModels/autoencoder-0.423')

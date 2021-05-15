@@ -65,37 +65,39 @@ class NNModel():
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
         self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(64))
+        self.model.add(layers.Dense(128))
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
         self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(32))
+        self.model.add(layers.Dense(128))
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
         self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(16))
+        self.model.add(layers.Dense(128))
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
         #self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(8))
+        self.model.add(layers.Dense(128))
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
         #self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(4))
+        self.model.add(layers.Dense(128))
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
         #self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(2))
+        self.model.add(layers.Dense(128))
         self.model.add(layers.LeakyReLU(alpha=0.3))
         self.model.add(layers.BatchNormalization())
         #self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(1))
+        self.model.add(layers.Dense(128))
         self.model.add(layers.Activation(K.activations.sigmoid))
 
         self.model.compile(optimizer=K.optimizers.Adam(learning_rate=self.lr), 
               #loss=K.losses.mean_squared_error,
               loss=K.losses.binary_crossentropy,
               metrics=[])
+
+        self.model.summary()
 
 
     def fit(self, features, targets, valFeatures, valTargets):
