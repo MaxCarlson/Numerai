@@ -5,7 +5,9 @@ import tensorflow as tf
 from keras import layers
 from keras import models
 
-MODEL_PATH='./nnModels/'
+from defines import *
+
+THIS_MODEL_PATH='/nnModels/nn'
 
 # TF differentiable correaltion function(s)?
 def correlation_coefficient_loss(y_true, y_pred):
@@ -45,51 +47,14 @@ class NNModel():
 
     def __init__(self, name=None):
         if name:
-            self.model = K.models.load_model(MODEL_PATH + name)
-            self.model.summary()
+            self.model = K.models.load_model(MODEL_PATH + THIS_MODEL_PATH + name)
             return
 
         self.model = models.Sequential()
-        self.model.add(layers.Dense(310))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(256))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(196))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(128))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(128))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(128))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(128))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        #self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(128))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        #self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(128))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        #self.model.add(layers.Dropout(0.15))
-        self.model.add(layers.Dense(128))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        #self.model.add(layers.Dropout(0.15))
+        self.model.add(K.Input(shape=(310,)))
+        for i in range(20):
+            self.addDenseBlock(128)
+
         self.model.add(layers.Dense(1))
         self.model.add(layers.Activation(K.activations.sigmoid))
 
@@ -100,6 +65,12 @@ class NNModel():
 
         #self.model.summary()
 
+    def addDenseBlock(self, sz):
+        self.model.add(layers.Dense(sz))
+        self.model.add(layers.LeakyReLU(alpha=0.3))
+        self.model.add(layers.BatchNormalization())
+        self.model.add(layers.Dropout(0.15))
+
 
     def fit(self, features, targets, valFeatures, valTargets):
         hist = self.model.fit(x=features.values, y=targets.values, epochs=self.epochs, 
@@ -107,7 +78,7 @@ class NNModel():
                         validation_data=(valFeatures.values, valTargets.values),
                         shuffle=True, callbacks=[self.stopping])
 
-        self.model.save('./nnModels/nn-{}'.format(round(hist.history['val_loss'][-1], 3)))
+        self.model.save(MODEL_PATH + THIS_MODEL_PATH + '-{}'.format(round(hist.history['val_loss'][-1], 3)))
 
     def predict(self, features):
         p = self.model.predict(x=features.values)

@@ -5,6 +5,10 @@ import tensorflow as tf
 from keras import layers
 from keras import models
 
+from defines import *
+
+THIS_MODEL_PATH = 'aeModels/autoencoder'
+
 class AutoEncoder():
     
     lr = 0.008
@@ -67,7 +71,7 @@ class AutoEncoder():
 
     def fit(self, features, val):
         if False:
-            self.model = keras.models.load_model('./aeModels/autoencoder-0.423')
+            self.model = keras.models.load_model(MODEL_PATH + THIS_MODEL_PATH + '-0.423')
 
         else:
             hist = self.model.fit(x=features.values, y=features.values, epochs=self.epochs, 
@@ -75,7 +79,7 @@ class AutoEncoder():
                                      validation_data=(val.values, val.values),
                                      shuffle=True, callbacks=[self.stopping])
 
-            self.model.save('./aeModels/autoencoder-{}'.format(round(hist.history['val_loss'][-1], 3)))
+            self.model.save(MODEL_PATH + THIS_MODEL_PATH + '-{}'.format(round(hist.history['val_loss'][-1], 3)))
         aeOutput = self.model.get_layer(name='OutputLayer').output
         self.encoder = keras.Model(inputs=self.model.input, outputs=aeOutput)
 

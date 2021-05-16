@@ -1,9 +1,7 @@
-TARGET_NAME = 'target'
-PREDICTION_NAME = 'prediction'
+import numpy as np
+import pandas as pd
 
-DIR = "./data/"
-CURRENT_DATASET = "numerai_dataset_263/"
-DATASET_PATH = DIR + CURRENT_DATASET
+from defines import *
 
 # Submissions are scored by spearman correlation
 def correlation(predictions, targets):

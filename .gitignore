@@ -361,11 +361,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/Numerai/data/numerai_dataset_262
-/Numerai/data/numerai_dataset_263
-/Numerai/example_model.xgb
-/Numerai/data/numerai_dataset_263.zip
-/Numerai/autoencoder.h5
-/Numerai/aeModels/autoencoder-0.423
-/Numerai/aeModels/autoencoder-0.468
-/Numerai/nnModels/nn-0.693
+/Numerai/data/
+/Numerai/aeModels/
+/Numerai/nnModels/
+*.xgb
+*.csv
+*.zip
+*.ipynb
+/Numerai/data/numerai_dataset_264/example_model.py
+/Numerai/data/numerai_dataset_264/example_model.r
+/Numerai/Models

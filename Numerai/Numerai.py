@@ -18,9 +18,11 @@ import csv
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
 
+from defines import *
 from NNetwork import NNModel
 from Encoder import AutoEncoder
-from Validation import validate, TARGET_NAME, PREDICTION_NAME, DIR, CURRENT_DATASET, DATASET_PATH
+from Validation import validate
+
 
 config = ConfigProto()
 config.gpu_options.allow_growth = True
@@ -85,7 +87,7 @@ if __name__ == "__main__":
 
     #runAE()
 
-    #model = trainModel(training_data, tournament_data, validation_data, feature_names, 'nn-0.693')
+    #model = trainModel(training_data, tournament_data, validation_data, feature_names, '-0.693')
     model = trainModel(training_data, tournament_data, validation_data, feature_names)
 
     validate(training_data, tournament_data, validation_data, feature_names, model)
