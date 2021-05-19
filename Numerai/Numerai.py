@@ -22,6 +22,7 @@ from defines import *
 from NNetwork import NNModel
 from Encoder import AutoEncoder
 from Validation import validate
+from EXGBoost import EXGBoost
 
 
 config = ConfigProto()
@@ -53,7 +54,7 @@ def loadData():
     validation_data = tournament_data[tournament_data.data_type == "validation"]
     #printCorrelation(training_data)
 
-    feature_names = [
+    feature_names = [ #['era']+
         f for f in training_data.columns if f.startswith("feature")
     ]
     print(f"Loaded {len(feature_names)} features")
@@ -81,14 +82,20 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
                   validation_data[feature_names], validation_data[TARGET_NAME])
     return model
 
+def trainXGBoost(training_data, tournament_data, validation_data, feature_names):
+    model = EXGBoost()
+    model.fit(training_data[feature_names], training_data[TARGET_NAME])
+    return model
 
 if __name__ == "__main__":
     training_data, tournament_data, validation_data, feature_names = loadData()
 
-    #runAE()
+    #runAE(training_data, tournament_data, validation_data, feature_names)
 
     #model = trainModel(training_data, tournament_data, validation_data, feature_names, '-0.693')
-    model = trainModel(training_data, tournament_data, validation_data, feature_names)
+    #model = trainModel(training_data, tournament_data, validation_data, feature_names)
+
+    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
 
     validate(training_data, tournament_data, validation_data, feature_names, model)
 

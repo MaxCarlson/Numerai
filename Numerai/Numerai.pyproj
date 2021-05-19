@@ -23,6 +23,8 @@
   <ItemGroup>
     <Compile Include="defines.py" />
     <Compile Include="Encoder.py" />
+    <Compile Include="EXGBoost.py" />
+    <Compile Include="ModelBase.py" />
     <Compile Include="NNetwork.py" />
     <Compile Include="Numerai.py" />
     <Compile Include="Validation.py" />

@@ -4,10 +4,14 @@ import pandas as pd
 import tensorflow as tf
 from keras import layers
 from keras import models
+from matplotlib import pyplot as plt
+from ModelBase import ModelBase
 
 from defines import *
 
-THIS_MODEL_PATH='/nnModels/nn'
+#tensorboard --logdir logs/fit
+
+THIS_MODEL_PATH = MODEL_PATH + '/nnModels/nn'
 
 # TF differentiable correaltion function(s)?
 def correlation_coefficient_loss(y_true, y_pred):
@@ -32,53 +36,93 @@ def correlation_tf(x, y):
     return r_num / r_den
 
 
-class NNModel():
-    lr = 0.005
-    epochs = 100
-    batchSize = 128
+class NNModel(ModelBase):
+    lr = 0.001
+    epochs = 20000
+    batchSize = 2048
 
     stopping = K.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=3,
+        patience=20,
         mode="auto",
         baseline=None,
-        min_delta=0.005,
+        min_delta=0.0001,
         restore_best_weights=True)
+
+
+    checkpoint = K.callbacks.ModelCheckpoint(filepath=THIS_MODEL_PATH+'/tmp', 
+                             monitor='val_loss',
+                             verbose=1, 
+                             save_best_only=True,
+                             mode='min')
 
     def __init__(self, name=None):
         if name:
-            self.model = K.models.load_model(MODEL_PATH + THIS_MODEL_PATH + name)
+            self.model = models.load_model(THIS_MODEL_PATH + name)
             return
 
-        self.model = models.Sequential()
-        self.model.add(K.Input(shape=(310,)))
-        for i in range(20):
-            self.addDenseBlock(128)
+        neurons = 512
+        inp = layers.Input((311,))
+        
+        out = self.addResBlock(inp, neurons, 0.2)
+        for i in range(15):
+            out = self.addResBlock(out, neurons, 0.2)
 
-        self.model.add(layers.Dense(1))
-        self.model.add(layers.Activation(K.activations.sigmoid))
+        out = layers.Dense(neurons, 'relu')(out)
+        out = layers.BatchNormalization()(out)
+        out = layers.Dropout(0.2)(out)
+        out = layers.Dense(1)(out)
+        out = K.activations.sigmoid(out)
 
-        self.model.compile(optimizer=K.optimizers.Adam(learning_rate=self.lr), 
+        self.model = K.Model(inputs = inp, outputs = out)
+        #self.model = models.Sequential()
+        #self.model.add(K.Input(shape=(310,)))
+        #for i in range(8):
+        #    self.addDenseBlock(96)
+        #
+        #self.model.add(layers.Dense(1))
+        #self.model.add(layers.Activation(K.activations.sigmoid))
+
+        self.model.compile(optimizer=K.optimizers.Adam(),
               #loss=K.losses.mean_squared_error,
               loss=K.losses.binary_crossentropy,
               metrics=[])
 
-        #self.model.summary()
+        self.model.summary()
 
-    def addDenseBlock(self, sz):
-        self.model.add(layers.Dense(sz))
-        self.model.add(layers.LeakyReLU(alpha=0.3))
-        self.model.add(layers.BatchNormalization())
-        self.model.add(layers.Dropout(0.15))
 
+
+    def addResBlock(self, inp, sz, d):
+        m = layers.Dense(sz)(inp)
+        mt = layers.ReLU()(m)
+        mt = layers.BatchNormalization()(mt)
+        mt = layers.Dropout(d)(mt)
+
+        mt = layers.Dense(sz)(mt)
+        mt = layers.ReLU()(m)
+        mt = layers.BatchNormalization()(mt)
+        mt = layers.Dropout(d)(mt)
+        return layers.Add()([m, mt])
+
+    #def addDenseBlock(self, sz):
+    #    self.model.add(layers.Dense(sz))
+    #    self.model.add(layers.ReLU())
+    #    self.model.add(layers.BatchNormalization())
+    #    self.model.add(layers.Dropout(0.15))
 
     def fit(self, features, targets, valFeatures, valTargets):
+        features['era'] = features['era'].apply(lambda x: (float(x[3:]) / features.shape[0]))
+        valFeatures['era'] = valFeatures['era'].apply(lambda x: (float(x[3:]) / valFeatures.shape[0]))
+
         hist = self.model.fit(x=features.values, y=targets.values, epochs=self.epochs, 
                         batch_size=self.batchSize, #steps_per_epoch=10,
                         validation_data=(valFeatures.values, valTargets.values),
-                        shuffle=True, callbacks=[self.stopping])
+                        shuffle=True, callbacks=[self.stopping, tensorboard])
 
-        self.model.save(MODEL_PATH + THIS_MODEL_PATH + '-{}'.format(round(hist.history['val_loss'][-1], 3)))
+        self.model.save(THIS_MODEL_PATH + '-{}'.format(
+            round(hist.history['val_loss'][-1], 3)))
+
+        NNModel.plotLoss('training', hist)
 
     def predict(self, features):
         p = self.model.predict(x=features.values)
