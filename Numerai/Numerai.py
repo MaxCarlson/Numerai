@@ -2,6 +2,10 @@
 # Maybe add difference in eras as feature?
 # Add cyclical learning rates
 
+# Train xgboosting and NN's, possibly ensamble
+# then: train a network to look at inputs and choose an output from the ensamble
+# or to take the outputs of the ensambles (possibly plus inputs) and generate a new output!
+
 # Feature Engineering
 # # # # # # # # # # # # 
 # Use autoencoder for feature engineering!
@@ -41,8 +45,12 @@ def read_csv(file_path):
     with open(file_path, 'r') as f:
         column_names = next(csv.reader(f))
 
-    dtypes = {x: np.float16 for x in column_names if x.startswith(('feature', TARGET_NAME))}
+    #dtypes = {x: np.float16 for x in column_names if x.startswith(('feature', TARGET_NAME))}
+    dtypes = {x: float for x in column_names if x.startswith(('feature', TARGET_NAME))}
+    
     df = pd.read_csv(file_path, dtype=dtypes, index_col=0)
+    #df = pd.read_csv(file_path, dtype=float, index_col=0)
+    
     return df
 
 def loadData():

@@ -111,8 +111,8 @@ class NNModel(ModelBase):
     #    self.model.add(layers.Dropout(0.15))
 
     def fit(self, features, targets, valFeatures, valTargets):
-        features['era'] = features['era'].apply(lambda x: (float(x[3:]) / features.shape[0]))
-        valFeatures['era'] = valFeatures['era'].apply(lambda x: (float(x[3:]) / valFeatures.shape[0]))
+        #features['era'] = features['era'].apply(lambda x: (float(x[3:]) / features.shape[0]))
+        #valFeatures['era'] = valFeatures['era'].apply(lambda x: (float(x[3:]) / valFeatures.shape[0]))
 
         hist = self.model.fit(x=features.values, y=targets.values, epochs=self.epochs, 
                         batch_size=self.batchSize, #steps_per_epoch=10,
