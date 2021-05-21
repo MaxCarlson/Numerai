@@ -130,5 +130,6 @@ if __name__ == "__main__":
 
     #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
 
-    validate(training_data, tournament_data, validation_data, feature_names, model)
+    validate(training_data, tournament_data, validation_data, 
+             feature_names, model, savePreds=False)
 

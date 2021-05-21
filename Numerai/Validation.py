@@ -17,7 +17,7 @@ def payout(scores):
     return scores.clip(lower=-0.25, upper=0.25)
 
 
-def validate(training_data, tournament_data, validation_data, feature_names, model):
+def validate(training_data, tournament_data, validation_data, feature_names, model, savePreds):
 
     training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
     # Check the per-era correlations on the training set (in sample)
@@ -95,7 +95,8 @@ def validate(training_data, tournament_data, validation_data, feature_names, mod
     corr_with_example_preds = per_era_corrs.mean()
     print(f"Corr with example preds: {corr_with_example_preds}")
 
-    #tournament_data[PREDICTION_NAME].to_csv("submission.csv", header=True)
+    if savePreds:
+        tournament_data[PREDICTION_NAME].to_csv("submission.csv", header=True)
 
 
 # to neutralize a column in a df by many other columns on a per-era basis
