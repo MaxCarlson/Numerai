@@ -97,21 +97,18 @@ class AutoEncoder(ModelBase):
 
     def saveData(self, training_data, tournament_data, feature_names):
         print('Generating encoded data...')
-        aeoutTrain      = self.encode(training_data[feature_names])
-        aeoutTournament = self.encode(tournament_data[feature_names])
-
-        print('Saving encoded data...')
-        new_features = ['feature{}'.format(f) for f in range(aeoutTrain.shape[1])]
-        training    = pd.DataFrame(data=aeoutTrain, columns=new_features)
-        tournament  = pd.DataFrame(data=aeoutTournament, columns=new_features)
 
         mcs = ['era', 'data_type', 'target']
+        new_cols = mcs + ['feature{}'.format(f) for f in range(aeoutTrain.shape[1])]
+        def pands(data, name):
+            out      = self.encode(data[feature_names])
+            saved = pd.DataFrame(data=out, columns=new_cols)
+            saved[mcs] = data[mcs]
+            saved.to_csv(AE_MODELS + name)
 
+        pands(training_data, 'numerai_training_data.csv')
+        #pands(tournament_data, 'numerai_tournament_data.csv')
 
-        training[mcs] = training_data[mcs]
-        tournament[mcs] = tournament_data[mcs]
+        print('Encoded data saved...')
 
-        training.to_csv(AE_MODELS + 'numerai_training_data.csv')
-        tournament.to_csv(AE_MODELS + 'numerai_tournament_data.csv')
-        print('Encoded data saved')
 
