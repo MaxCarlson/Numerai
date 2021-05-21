@@ -70,7 +70,7 @@ def loadData():
     return training_data, tournament_data, validation_data, feature_names
 
 def runAE(training_data, tournament_data, validation_data, feature_names, 
-          saveData=False, modelName=None):
+          saveData=False, modelName=None, printCorr=False):
     ae = AutoEncoder()
     if modelName:
         ae.load(modelName)
@@ -79,15 +79,14 @@ def runAE(training_data, tournament_data, validation_data, feature_names,
 
     #print('Printing features: \n', validation_data[feature_names])
     #print('Printing targets: \n', validation_data['target'])
-
-    aeoutTrain = ae.encode(training_data[feature_names])
-    aeoutVal = ae.encode(validation_data[feature_names])
-
-    train_corr_matrix = AutoEncoder.printCorrelation(aeoutTrain, training_data[TARGET_NAME])
-    valid_corr_matrix = AutoEncoder.printCorrelation(aeoutVal, validation_data[TARGET_NAME])
+    if printCorr:
+        aeoutTrain = ae.encode(training_data[feature_names])
+        aeoutVal = ae.encode(validation_data[feature_names])
+        train_corr_matrix = AutoEncoder.printCorrelation(aeoutTrain, training_data[TARGET_NAME])
+        valid_corr_matrix = AutoEncoder.printCorrelation(aeoutVal, validation_data[TARGET_NAME])
 
     if saveData: 
-        ae.saveData(training_data, tournament_data, feature_names)
+        ae.saveData(training_data, tournament_data, feature_names, '0.423')
     stop=True
 
 
