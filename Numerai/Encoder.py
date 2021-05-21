@@ -96,20 +96,19 @@ class AutoEncoder(ModelBase):
         return p
 
     def saveData(self, training_data, tournament_data, feature_names, modelName):
-        print('Generating & saving encoded data...')
-
         mcs = ['era', 'data_type', 'target']
         new_cols = ['feature{}'.format(f) for f in range(
             self.model.get_layer(name='OutputLayer').output.shape[1])]
-        def pands(data, name):
+        def pands(data, name, pname):
+            print('Generating {} data...'.format(pname))
             out      = self.encode(data[feature_names])
             saved = pd.DataFrame(data=out, columns=new_cols, index=data.index)
+            print('Saving {} data...'.format(pname))
             saved[mcs] = data[mcs]
             saved.to_csv(THIS_MODEL_PATH + modelName + '/' + name)
 
-        pands(training_data, 'numerai_training_data.csv')
-        #pands(tournament_data, 'numerai_tournament_data.csv')
-
+        #pands(training_data, 'numerai_training_data.csv', 'training')
+        pands(tournament_data, 'numerai_tournament_data.csv', 'tournament')
         print('Encoded data saved...')
 
 

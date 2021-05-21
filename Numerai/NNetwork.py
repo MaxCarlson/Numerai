@@ -39,7 +39,7 @@ def correlation_tf(x, y):
 class NNModel(ModelBase):
     lr = 0.001
     epochs = 20000
-    batchSize = 2048
+    batchSize = 4096
 
     stopping = K.callbacks.EarlyStopping(
         monitor="val_loss",
@@ -61,8 +61,8 @@ class NNModel(ModelBase):
             self.model = models.load_model(THIS_MODEL_PATH + name)
             return
 
-        neurons = 512
-        inp = layers.Input((311,))
+        neurons = 128
+        inp = layers.Input((128,))
         
         out = self.addResBlock(inp, neurons, 0.2)
         for i in range(15):

@@ -9,6 +9,7 @@ class EXGBoost():
     def __init__(self):
         self.model = xgb.XGBRegressor(random_state=1, max_depth=5, 
                                       n_estimators=2000, learning_rate=0.01,#)#, 
+                                      colsample_bytree=0.25,
                                       tree_method='gpu_hist', gpu_id=0)
 
 
