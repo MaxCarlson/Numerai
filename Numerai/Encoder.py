@@ -8,7 +8,7 @@ from ModelBase import ModelBase
 
 from defines import *
 
-THIS_MODEL_PATH = MODEL_PATH + 'aeModels/autoencoder'
+THIS_MODEL_PATH = MODEL_PATH + '/aeModels/autoencoder-'
 
 class AutoEncoder(ModelBase):
     
@@ -71,10 +71,14 @@ class AutoEncoder(ModelBase):
 
         #self.model.summary()
 
+    def load(self, name):
+        self.model = keras.models.load_model(THIS_MODEL_PATH + name)
+        aeOutput = self.model.get_layer(name='OutputLayer').output
+        self.encoder = keras.Model(inputs=self.model.input, outputs=aeOutput)
 
     def fit(self, features, val):
         if False:
-            self.model = keras.models.load_model(THIS_MODEL_PATH + '-0.423')
+            self.model = keras.models.load_model(THIS_MODEL_PATH + '0.423')
 
         else:
             hist = self.model.fit(x=features.values, y=features.values, epochs=self.epochs, 
@@ -82,10 +86,27 @@ class AutoEncoder(ModelBase):
                                      validation_data=(val.values, val.values),
                                      shuffle=True, callbacks=[self.stopping, tensorboard])
 
-            self.model.save(THIS_MODEL_PATH + '-{}'.format(round(hist.history['val_loss'][-1], 3)))
+            self.model.save(THIS_MODEL_PATH + '{}'.format(round(hist.history['val_loss'][-1], 3)))
         aeOutput = self.model.get_layer(name='OutputLayer').output
         self.encoder = keras.Model(inputs=self.model.input, outputs=aeOutput)
 
     def encode(self, features):
         p = self.encoder.predict(x=features.values)
         return p
+
+    def saveData(self, training_data, tournament_data, feature_names):
+        aeoutTrain      = self.encode(training_data[feature_names])
+        aeoutTournament = self.encode(tournament_data[feature_names])
+
+        new_features = ['feature{}'.format(f) for f in range(len(aeoutTrain.shape[1]))]
+        training    = pd.DataFrame(data=aeoutTrain, columns=new_features)
+        tournament  = pd.DataFrame(data=aeoutTournament, columns=new_features)
+
+        mcs = ['id', 'era', 'data_type', 'target']
+
+        training[mcs] = training_data[mcs]
+        tournament[mcs] = tournament_data[mcs]
+
+        training.to_csv(THIS_MODEL_PATH + 'numerai_training_data.csv')
+        tournament.to_csv(THIS_MODEL_PATH + 'numerai_tournament_data.csv')
+

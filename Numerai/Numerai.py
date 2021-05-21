@@ -46,7 +46,7 @@ def read_csv(file_path):
         column_names = next(csv.reader(f))
 
     #dtypes = {x: np.float16 for x in column_names if x.startswith(('feature', TARGET_NAME))}
-    dtypes = {x: float for x in column_names if x.startswith(('feature', TARGET_NAME))}
+    dtypes = {x: np.float32 for x in column_names if x.startswith(('feature', TARGET_NAME))}
     
     df = pd.read_csv(file_path, dtype=dtypes, index_col=0)
     #df = pd.read_csv(file_path, dtype=float, index_col=0)
@@ -69,18 +69,27 @@ def loadData():
 
     return training_data, tournament_data, validation_data, feature_names
 
-def runAE(training_data, tournament_data, validation_data, feature_names):
+def runAE(training_data, tournament_data, validation_data, feature_names, 
+          saveData=False, modelName=None):
     ae = AutoEncoder()
+    if modelName:
+        ae.load(modelName)
+    else:
+        ae.fit(training_data[feature_names], validation_data[feature_names])
 
     #print('Printing features: \n', validation_data[feature_names])
     #print('Printing targets: \n', validation_data['target'])
 
-    ae.fit(training_data[feature_names], validation_data[feature_names])
     aeoutTrain = ae.encode(training_data[feature_names])
     aeoutVal = ae.encode(validation_data[feature_names])
 
     train_corr_matrix = AutoEncoder.printCorrelation(aeoutTrain, training_data[TARGET_NAME])
     valid_corr_matrix = AutoEncoder.printCorrelation(aeoutVal, validation_data[TARGET_NAME])
+
+    if saveData: 
+        ae.saveData(training_data, tournament_data, feature_names)
+    stop=True
+
 
 
 def trainModel(training_data, tournament_data, validation_data, feature_names, modelName=None):
@@ -99,6 +108,7 @@ if __name__ == "__main__":
     training_data, tournament_data, validation_data, feature_names = loadData()
 
     #runAE(training_data, tournament_data, validation_data, feature_names)
+    runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
     #model = trainModel(training_data, tournament_data, validation_data, feature_names, '-0.693')
     #model = trainModel(training_data, tournament_data, validation_data, feature_names)
