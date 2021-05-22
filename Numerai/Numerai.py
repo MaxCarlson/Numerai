@@ -19,10 +19,13 @@
 # Group datasets by eras. Train on all eras, then perform boosting on more difficult eras
 # (eras with low target correlation)!!!
 # Feature neutralization
-#
-#
+# Train encoder with custom loss function set to maximize output correlation to target?
+# Boost NN model with scikit-learn AdaBoostRegressor
 
+# TODO
+# Switch to pd.HDFStore('numera_training_data.h5')
 
+import os
 import csv
 import warnings
 import numerapi
@@ -64,15 +67,21 @@ def read_csv(file_path):
     
     return df
 
-def loadData(path=None):
-    if not path:
-        path = DATASET_PATH
+def loadData(path=DATASET_PATH):
 
     print("Loading data...")
-    # The training data is used to train your model how to predict the targets.
-    training_data = read_csv(path + "numerai_training_data.csv")
-    # The tournament data is the data that Numerai uses to evaluate your model.
-    tournament_data = read_csv(path  + "numerai_tournament_data.csv")
+    if not os.path.isfile(path + "data.h5"):
+        print('Saving new dataset as hdf5...')
+        training_data = read_csv(path + "numerai_training_data.csv")
+        tournament_data = read_csv(path  + "numerai_tournament_data.csv")
+
+        training_data.to_hdf(path + "data.h5", key='training')
+        tournament_data.to_hdf(path + "data.h5", key='tournament')
+    else:
+        training_data = pd.read_hdf(path + 'data.h5', key='training')
+        tournament_data = pd.read_hdf(path + "data.h5", key='tournament')
+
+
     validation_data = tournament_data[tournament_data.data_type == "validation"]
     #printCorrelation(training_data)
 
@@ -118,18 +127,29 @@ def trainXGBoost(training_data, tournament_data, validation_data, feature_names)
     return model
 
 if __name__ == "__main__":
-    #training_data, tournament_data, validation_data, feature_names = loadData()
-    training_data, tournament_data, validation_data, feature_names = loadData('models/aeModels/autoencoder-0.423/')
+    alteredData=False
+
+    if alteredData:
+        training_data, tournament_data, validation_data, feature_names = loadData('models/aeModels/autoencoder-0.423/')
+    else:
+        training_data, tournament_data, validation_data, feature_names = loadData()
 
 
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
     #model = trainModel(training_data, tournament_data, validation_data, feature_names, '-0.693')
-    model = trainModel(training_data, tournament_data, validation_data, feature_names)
+    #model = trainModel(training_data, tournament_data, validation_data, feature_names)
 
-    #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
+    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
 
-    validate(training_data, tournament_data, validation_data, 
-             feature_names, model, savePreds=False)
+    # Load non manipulated data for validation purposes
+    if alteredData:
+        atraining_data, atournament_data, validation_data, afeature_names = loadData()
+        validate(atraining_data, atournament_data, validation_data, 
+                 afeature_names, model, training_data, tournament_data, 
+                 feature_names, savePreds=False)
+    else:
+        validate(training_data, tournament_data, validation_data, 
+                 feature_names, model, savePreds=False)
 
