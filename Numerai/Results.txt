@@ -1,0 +1,105 @@
+
+1. 
+
+Added No Features
+
+self.model = xgb.XGBRegressor(random_state=1, max_depth=5, 
+                              n_estimators=3000, learning_rate=0.01,#)#, 
+                              colsample_bytree=0.25, #reg_lambda=1.5, #min_split_loss=10, 
+                              tree_method='gpu_hist', gpu_id=0)
+
+	Training Model...                    
+	On training the correlation has mean 0.2497086989026632 and std 0.026610249490301628
+	On training the average per-era payout is 0.23933495148826842
+	On validation the correlation has mean 0.026059994410019462 and std 0.026845137926948842
+	On validation the average per-era payout is 0.026059994410019462
+	Validation Sharpe: 0.970752859640136
+	checking max drawdown...
+	max drawdown: -0.034545436522039674
+	Max Feature Exposure: 0.2673461161474308
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.01982550934340026
+	calculating MMC stats...
+	MMC Mean: 0.0007348928636646855
+	Corr Plus MMC Sharpe:0.9421540996801437
+	Corr Plus MMC Diff:-0.02859875995999228
+	Corr with example preds: 0.9446335066529976
+
+Added mean * std
+	Added 6 features
+	Training Model...
+	On training the correlation has mean 0.257713063745263 and std 0.026511576890629225
+	On training the average per-era payout is 0.24319263519641338
+	On validation the correlation has mean 0.02623195566333137 and std 0.027622710275419023
+	On validation the average per-era payout is 0.02623195566333137
+	Validation Sharpe: 0.949651768482499
+	checking max drawdown...
+	max drawdown: -0.04338636818457663
+	Max Feature Exposure: 0.26634085783151573
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.019135115741134686
+	calculating MMC stats...
+	MMC Mean: 0.0012497173309048658
+	Corr Plus MMC Sharpe:0.8971590001671749
+	Corr Plus MMC Diff:-0.05249276831532412
+	Corr with example preds: 0.9261386350959234
+	Press any key to continue . . .
+
+Added feature_mean
+	Added 6 features
+	Training Model...
+	On training the correlation has mean 0.24876165203090647 and std 0.026646707008593125
+	On training the average per-era payout is 0.2388919746961003
+	On validation the correlation has mean 0.02567556676526282 and std 0.027019131474903355
+	On validation the average per-era payout is 0.02567556676526282
+	Validation Sharpe: 0.9502735788939588
+	checking max drawdown...
+	max drawdown: -0.036430245609945205
+	Max Feature Exposure: 0.26646938576916795
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.0187747304232375
+	calculating MMC stats...
+	MMC Mean: 0.0007265807495782781
+	Corr Plus MMC Sharpe:0.9066471096679879
+	Corr Plus MMC Diff:-0.04362646922597091
+	Corr with example preds: 0.9303259231617084
+
+Added feature std
+
+	Added 6 features
+	Training Model...
+	On training the correlation has mean 0.2580645609223175 and std 0.02792815966682245
+	On training the average per-era payout is 0.2425659682670433
+	On validation the correlation has mean 0.02567607217857586 and std 0.026624058945536447
+	On validation the average per-era payout is 0.02567607217857586
+	Validation Sharpe: 0.9643936047129463
+	checking max drawdown...
+	max drawdown: -0.03650037373040975
+	Max Feature Exposure: 0.26648313367611476
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.01860245970475637
+	calculating MMC stats...
+	MMC Mean: 0.0008287801093968051
+	Corr Plus MMC Sharpe:0.9192877942689702
+	Corr Plus MMC Diff:-0.0451058104439761
+	Corr with example preds: 0.9255529143010869
+
+Added feature var
+	
+	Added 6 features
+	Training Model...
+	On training the correlation has mean 0.2580645609223175 and std 0.02792815966682245
+	On training the average per-era payout is 0.2425659682670433
+	On validation the correlation has mean 0.02567607217857586 and std 0.026624058945536447
+	On validation the average per-era payout is 0.02567607217857586
+	Validation Sharpe: 0.9643936047129463
+	checking max drawdown...
+	max drawdown: -0.03650037373040975
+	Max Feature Exposure: 0.26648313367611476
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.01860245970475637
+	calculating MMC stats...
+	MMC Mean: 0.0008287801093968051
+	Corr Plus MMC Sharpe:0.9192877942689702
+	Corr Plus MMC Diff:-0.0451058104439761
+	Corr with example preds: 0.9255529143010869

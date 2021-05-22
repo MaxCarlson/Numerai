@@ -18,20 +18,15 @@ def payout(scores):
 
 
 def validate(training_data, tournament_data, validation_data, 
-             feature_names, model, mTrainingData=None, mTournamentData=None,
-             mFeatureNames=None, savePreds=False):
+             feature_names, new_feature_names, model, savePreds=False):
 
-    training_data[PREDICTION_NAME] = model.predict(mTrainingData[mFeatureNames] 
-                                                   if (mTrainingData is not None) 
-                                                   else training_data[feature_names])
+    training_data[PREDICTION_NAME] = model.predict(training_data[new_feature_names])
     # Check the per-era correlations on the training set (in sample)
     train_correlations = training_data.groupby("era").apply(score)
     print(f"On training the correlation has mean {train_correlations.mean()} and std {train_correlations.std(ddof=0)}")
     print(f"On training the average per-era payout is {payout(train_correlations).mean()}")
 
-    tournament_data[PREDICTION_NAME] = model.predict(mTournamentData[mFeatureNames] 
-                                                     if (mTournamentData is not None) 
-                                                     else tournament_data[feature_names])
+    tournament_data[PREDICTION_NAME] = model.predict(tournament_data[new_feature_names])
     
     """Validation Metrics"""
     # Check the per-era correlations on the validation set (out of sample)

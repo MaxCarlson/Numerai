@@ -37,7 +37,7 @@ from tensorflow.compat.v1 import InteractiveSession
 from defines import *
 from NNetwork import NNModel
 from Encoder import AutoEncoder
-from Validation import validate
+from Validation import validate, neutralize_series
 from EXGBoost import EXGBoost
 
 warnings.filterwarnings('ignore')
@@ -69,6 +69,17 @@ def read_csv(file_path):
     
     return df
 
+def addFeatures(data):
+    fp = 'feature_'
+    fn = ['intelligence', 'charisma', 'strength', 'dexterity', 'constitution', 'wisdom']
+    for f in fn:
+        c = [col for col, _ in data.iteritems() if f in col]
+        data[fp + f + '_meanvar'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].var(axis=1).astype(DATA_TYPE)
+        #data[fp + f + '_meanstd'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].std(axis=1).astype(DATA_TYPE)
+        
+        #data[fp + f + '_std'] = data[c].std(axis=1).astype(DATA_TYPE)
+        #data[fp + f + '_var'] = data[c].var(axis=1).astype(DATA_TYPE)
+
 def loadData(path=DATASET_PATH):
 
     print("Loading data...")
@@ -83,24 +94,47 @@ def loadData(path=DATASET_PATH):
         training_data = pd.read_hdf(path + 'data.h5', key='training')
         tournament_data = pd.read_hdf(path + "data.h5", key='tournament')
 
-        fn = ['inte_mean', 'char_mean', 'stre_mean', 'dext_mean', 'cons_mean', 'wisd_mean']
-        def addFeatures(data):
-            for f in fn:
-                c = [col for col, _ in data.iteritems() if f[:4] in col]
-                data[f] = data[c].mean(axis=1).astype(DATA_TYPE)
-        
-        addFeatures(training_data)
-        addFeatures(tournament_data)
 
     validation_data = tournament_data[tournament_data.data_type == "validation"]
     #printCorrelation(training_data)
+    o_feature_names = [ #['era']+
+        f for f in training_data.columns if f.startswith("feature")]
+    print(f"Loaded {len(o_feature_names)} features")
+
+    print('Augmenting Features...')
+    addFeatures(training_data)
+    addFeatures(tournament_data)
 
     feature_names = [ #['era']+
-        f for f in training_data.columns if f.startswith("feature")
-    ]
-    print(f"Loaded {len(feature_names)} features")
+        f for f in training_data.columns if f.startswith("feature")]
+    print('Added {} features'.format(len(feature_names) - len(o_feature_names)))
 
-    return training_data, tournament_data, validation_data, feature_names
+    #def nu(data):
+    #    for f in feature_names:
+    #        data[f] = neutralize_series(data[f], data[TARGET_NAME])
+    #
+    #nu(training_data)
+    #nu(tournament_data)
+
+    def nu(df, target="resp", by=None, proportion=1.0):
+        if by is None:
+            by = [x for x in df.columns if x.startswith('feature')]
+
+        scores = df[target]
+        exposures = df[by].values
+
+        # constant column to make sure the series is completely neutral to exposures
+        exposures = np.hstack((exposures, np.array([np.mean(scores)] * len(exposures)).reshape(-1, 1)))
+
+        scores -= proportion * (exposures @ (np.linalg.pinv(exposures) @ scores.values))
+        out = pd.DataFrame(scores / scores.std(), index=df.index)
+        df[by] = out
+
+    fsp = int(len(feature_names)/2)
+    nu(training_data, target='target', by=feature_names[:fsp])
+    nu(training_data, target='target', by=feature_names[fsp:])
+
+    return training_data, tournament_data, validation_data, feature_names, o_feature_names
 
 def runAE(training_data, tournament_data, validation_data, feature_names, 
           saveData=False, modelName=None, printCorr=False):
@@ -140,9 +174,9 @@ if __name__ == "__main__":
     alteredData=False
 
     if alteredData:
-        training_data, tournament_data, validation_data, feature_names = loadData('models/aeModels/autoencoder-0.423/')
+        training_data, tournament_data, validation_data, feature_names, o_features_names = loadData('models/aeModels/autoencoder-0.423/')
     else:
-        training_data, tournament_data, validation_data, feature_names = loadData()
+        training_data, tournament_data, validation_data, feature_names, o_features_names = loadData()
 
 
     #runAE(training_data, tournament_data, validation_data, feature_names)
@@ -150,16 +184,16 @@ if __name__ == "__main__":
 
     #model = trainModel(training_data, tournament_data, validation_data, feature_names, '-0.693')
     #model = trainModel(training_data, tournament_data, validation_data, feature_names)
-
     model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
 
     # Load non manipulated data for validation purposes
     if alteredData:
-        atraining_data, atournament_data, validation_data, afeature_names = loadData()
-        validate(atraining_data, atournament_data, validation_data, 
-                 afeature_names, model, training_data, tournament_data, 
-                 feature_names, savePreds=False)
+        pass
+        #atraining_data, atournament_data, validation_data, afeature_names = loadData()
+        #validate(atraining_data, atournament_data, validation_data, 
+        #         afeature_names, model, training_data, tournament_data, 
+        #         feature_names, savePreds=False)
     else:
         validate(training_data, tournament_data, validation_data, 
-                 feature_names, model, savePreds=False)
+                 o_features_names, feature_names, model, savePreds=False)
 
