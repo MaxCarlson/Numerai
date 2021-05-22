@@ -9,10 +9,10 @@ class EXGBoost():
     def __init__(self):
         self.model = xgb.XGBRegressor(random_state=1, max_depth=5, 
                                       n_estimators=3000, learning_rate=0.01,#)#, 
-                                      colsample_bytree=0.25, min_split_loss=10, reg_lambda=1.5,
+                                      colsample_bytree=0.25, #reg_lambda=1.5, #min_split_loss=10, 
                                       tree_method='gpu_hist', gpu_id=0)
 
-
+    # TODO: Try early stopping?
     def fit(self, x, y):
         print('Training Model...')
         self.model.fit(x, y)

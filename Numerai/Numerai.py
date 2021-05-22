@@ -54,13 +54,15 @@ NAPI = numerapi.NumerAPI(verbosity="info")
 # Download new data
 NAPI.download_current_dataset(dest_path=DIR, unzip=True)
 
+DATA_TYPE = np.float32
+
 # Read the csv file into a pandas Dataframe as float16 to save space
 def read_csv(file_path):
     with open(file_path, 'r') as f:
         column_names = next(csv.reader(f))
 
     #dtypes = {x: np.float16 for x in column_names if x.startswith(('feature', TARGET_NAME))}
-    dtypes = {x: np.float32 for x in column_names if x.startswith(('feature', TARGET_NAME))}
+    dtypes = {x: DATA_TYPE for x in column_names if x.startswith(('feature', TARGET_NAME))}
     
     df = pd.read_csv(file_path, dtype=dtypes, index_col=0)
     #df = pd.read_csv(file_path, dtype=float, index_col=0)
@@ -81,6 +83,14 @@ def loadData(path=DATASET_PATH):
         training_data = pd.read_hdf(path + 'data.h5', key='training')
         tournament_data = pd.read_hdf(path + "data.h5", key='tournament')
 
+        fn = ['inte_mean', 'char_mean', 'stre_mean', 'dext_mean', 'cons_mean', 'wisd_mean']
+        def addFeatures(data):
+            for f in fn:
+                c = [col for col, _ in data.iteritems() if f[:4] in col]
+                data[f] = data[c].mean(axis=1).astype(DATA_TYPE)
+        
+        addFeatures(training_data)
+        addFeatures(tournament_data)
 
     validation_data = tournament_data[tournament_data.data_type == "validation"]
     #printCorrelation(training_data)
