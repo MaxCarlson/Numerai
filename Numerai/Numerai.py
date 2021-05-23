@@ -87,7 +87,7 @@ def loadData(path=DATASET_PATH):
         f for f in training_data.columns if f.startswith("feature")]
     print(f"Loaded {len(o_feature_names)} features")
 
-    training_data, tournament_data = addFeatures(training_data, tournament_data)
+    #training_data, tournament_data = addFeatures(training_data, tournament_data)
 
     feature_names = [ #['era']+
         f for f in training_data.columns if f.startswith("feature")]
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
     print('Predictions done...')
 
-    modifyPreds(training_data, tournament_data, feature_names)
+    #modifyPreds(training_data, tournament_data, feature_names)
 
     # Load non manipulated data for validation purposes
     if alteredData:

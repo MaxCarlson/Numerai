@@ -5,25 +5,24 @@ Added No Features
 
 self.model = xgb.XGBRegressor(random_state=1, max_depth=5, 
                               n_estimators=3000, learning_rate=0.01,#)#, 
-                              colsample_bytree=0.25, #reg_lambda=1.5, #min_split_loss=10, 
+                              colsample_bytree=0.25, reg_lambda=1.2, #min_split_loss=10, 
                               tree_method='gpu_hist', gpu_id=0)
 
-	Training Model...                    
-	On training the correlation has mean 0.2497086989026632 and std 0.026610249490301628
-	On training the average per-era payout is 0.23933495148826842
-	On validation the correlation has mean 0.026059994410019462 and std 0.026845137926948842
-	On validation the average per-era payout is 0.026059994410019462
-	Validation Sharpe: 0.970752859640136
+	On training the correlation has mean 0.2499271942600959 and std 0.027042702289782568
+	On training the average per-era payout is 0.23932112619625096
+	On validation the correlation has mean 0.026558694732094962 and std 0.02717073731793654
+	On validation the average per-era payout is 0.026558694732094962
+	Validation Sharpe: 0.9774742003251585
 	checking max drawdown...
-	max drawdown: -0.034545436522039674
-	Max Feature Exposure: 0.2673461161474308
+	max drawdown: -0.032467543402017865
+	Max Feature Exposure: 0.2671605107780282
 	Calculating feature neutral mean...
-	Feature Neutral Mean is 0.01982550934340026
+	Feature Neutral Mean is 0.020334517936018752
 	calculating MMC stats...
-	MMC Mean: 0.0007348928636646855
-	Corr Plus MMC Sharpe:0.9421540996801437
-	Corr Plus MMC Diff:-0.02859875995999228
-	Corr with example preds: 0.9446335066529976
+	MMC Mean: 0.0011568257744513117
+	Corr Plus MMC Sharpe:0.9528495828050184
+	Corr Plus MMC Diff:-0.024624617520140113
+	Corr with example preds: 0.9431059948297097
 
 
 Added 0 features & feature neutralization
@@ -60,6 +59,23 @@ Added mean * std + fn
 	Corr Plus MMC Sharpe:0.9051985167428883
 	Corr Plus MMC Diff:-0.25746093356015354
 	Corr with example preds: 0.487707050540611
+
+Added per-era std
+	On training the correlation has mean 0.2634051841696964 and std 0.04499351378964712
+	On training the average per-era payout is 0.23978057521808113
+	On validation the correlation has mean 0.023678274641109255 and std 0.02538842105161924
+	On validation the average per-era payout is 0.023678274641109255
+	Validation Sharpe: 0.9326406944711941
+	checking max drawdown...
+	max drawdown: -0.03425801758435186
+	Max Feature Exposure: 0.27739756259014475
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.0182449845779691
+	calculating MMC stats...
+	MMC Mean: -0.0003838943274046504
+	Corr Plus MMC Sharpe:0.8585787990031403
+	Corr Plus MMC Diff:-0.07406189546805386
+	Corr with example preds: 0.9163635162800479
 
 
 Added mean * std

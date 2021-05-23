@@ -43,6 +43,7 @@ def addStatFeatures(data):
         
         #out = data[['era'] + c].groupby("era")[c].apply(lambda x: x.mean(axis=0).astype(DATA_TYPE))
         out = data[['era'] + c].groupby("era")[c].transform(lambda x: x.std(axis=0).astype(DATA_TYPE))
+        out = norm(out)
 
         out.columns = [column + '_erastd' for column in out.columns]
         data = pd.concat([data, out], axis=1)
