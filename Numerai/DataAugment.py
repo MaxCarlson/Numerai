@@ -41,7 +41,7 @@ def addStatFeatures(data):
 
         # TODO: Add rolling (by era) feature means/var/std etc
         
-        out = data[['era'] + c].groupby("era")[c].apply(lambda x: x.mean(axis=0).astype(DATA_TYPE))
+        #out = data[['era'] + c].groupby("era")[c].apply(lambda x: x.mean(axis=0).astype(DATA_TYPE))
         out = data[['era'] + c].groupby("era")[c].transform(lambda x: x.std(axis=0).astype(DATA_TYPE))
 
         out.columns = [column + '_erastd' for column in out.columns]

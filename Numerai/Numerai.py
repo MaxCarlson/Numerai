@@ -125,9 +125,10 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
                   validation_data[feature_names], validation_data[TARGET_NAME])
     return model
 
-def trainXGBoost(training_data, tournament_data, validation_data, feature_names):
-    model = EXGBoost()
-    model.fit(training_data[feature_names], training_data[TARGET_NAME])
+def trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False):
+    model = EXGBoost(loadModel)
+    if not loadModel:
+        model.fit(training_data[feature_names], training_data[TARGET_NAME])
     return model
 
 if __name__ == "__main__":
@@ -151,14 +152,14 @@ if __name__ == "__main__":
     #feature_names += ['nnpred']
     #validation_data = tournament_data[tournament_data.data_type == "validation"]
 
-    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
+    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False)
 
     print('Starting Predictions...')
     training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
     print('Predictions done...')
 
-    #modifyPreds(training_data, tournament_data, feature_names)
+    modifyPreds(training_data, tournament_data, feature_names)
 
     # Load non manipulated data for validation purposes
     if alteredData:
