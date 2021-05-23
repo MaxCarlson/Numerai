@@ -16,39 +16,14 @@ def score(df):
 def payout(scores):
     return scores.clip(lower=-0.25, upper=0.25)
 
-def nu(df, target=PREDICTION_NAME, by=None, proportion=1.0):
-    if by is None:
-        by = [x for x in df.columns if x.startswith('feature')]
-
-    scores = df[target]
-    exposures = df[by].values
-
-    # constant column to make sure the series is completely neutral to exposures
-    exposures = np.hstack((exposures, np.array([np.mean(scores)] * len(exposures)).reshape(-1, 1)))
-
-    scores -= proportion * (exposures @ (np.linalg.pinv(exposures) @ scores.values))
-    out = pd.DataFrame(scores / scores.std(), index=df.index)
-    return out
-
-def per_era_neutralization(df, feature_names, pred_name=PREDICTION_NAME):
-    df[pred_name] = df.groupby("era").apply(lambda x: nu(x, [pred_name], feature_names))
-    scaled_preds = sklearn.preprocessing.MinMaxScaler().fit_transform(df[[pred_name]])
-    return scaled_preds
-
 def validate(training_data, tournament_data, validation_data, 
-             feature_names, new_feature_names, model, savePreds=False):
-    print('Starting Predictions...')
-    training_data[PREDICTION_NAME] = model.predict(training_data[new_feature_names])
-    tournament_data[PREDICTION_NAME] = model.predict(tournament_data[new_feature_names])
-    print('Predictions done...')
+             feature_names, model, savePreds=False):
 
-    training_data[PREDICTION_NAME] = per_era_neutralization(training_data, new_feature_names)
+
     # Check the per-era correlations on the training set (in sample)
     train_correlations = training_data.groupby("era").apply(score)
     print(f"On training the correlation has mean {train_correlations.mean()} and std {train_correlations.std(ddof=0)}")
     print(f"On training the average per-era payout is {payout(train_correlations).mean()}")
-
-    tournament_data[PREDICTION_NAME] = per_era_neutralization(tournament_data, new_feature_names)
 
     """Validation Metrics"""
     # Check the per-era correlations on the validation set (out of sample)
@@ -119,6 +94,7 @@ def validate(training_data, tournament_data, validation_data,
     print(f"Corr with example preds: {corr_with_example_preds}")
 
     if savePreds:
+        print('Saving Submissions...')
         tournament_data[PREDICTION_NAME].to_csv("submission.csv", header=True)
 
 

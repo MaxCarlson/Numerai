@@ -44,6 +44,22 @@ Added 0 features & feature neutralization
 	Corr Plus MMC Diff:-0.24471944430720638
 	Corr with example preds: 0.5265728423517907
 
+Added mean * std + fn
+	On training the correlation has mean 0.2793528823885364 and std 0.020936038877545547
+	On training the average per-era payout is 0.24945223999035296
+	On validation the correlation has mean 0.02062850647419532 and std 0.01774251821444241
+	On validation the average per-era payout is 0.02062850647419532
+	Validation Sharpe: 1.1626594503030419
+	checking max drawdown...
+	max drawdown: -0.031643344565500275
+	Max Feature Exposure: 7.979626417582135e-06
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.019878875134485822
+	calculating MMC stats...
+	MMC Mean: 0.00583628342570424
+	Corr Plus MMC Sharpe:0.9051985167428883
+	Corr Plus MMC Diff:-0.25746093356015354
+	Corr with example preds: 0.487707050540611
 
 
 Added mean * std
@@ -162,3 +178,29 @@ Added feature var
 	Corr Plus MMC Sharpe:0.9192877942689702
 	Corr Plus MMC Diff:-0.0451058104439761
 	Corr with example preds: 0.9255529143010869
+
+
+
+
+
+
+
+
+NN Preds
+-----------------------------------------------------------------------------------------------
+
+	On training the correlation has mean 0.0312155764300556 and std 0.02051178510145177
+	On training the average per-era payout is 0.0312155764300556
+	On validation the correlation has mean 0.011490100927330377 and std 0.019651084263689493
+	On validation the average per-era payout is 0.011490100927330377
+	Validation Sharpe: 0.5847056973116408
+	checking max drawdown...
+	max drawdown: -0.04552511602464749
+	Max Feature Exposure: 0.43544914422308084
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.007353203359178065
+	calculating MMC stats...
+	MMC Mean: 0.004191086884874299
+	Corr Plus MMC Sharpe:0.47730463282079133
+	Corr Plus MMC Diff:-0.10740106449084946
+	Corr with example preds: 0.21774233880741375

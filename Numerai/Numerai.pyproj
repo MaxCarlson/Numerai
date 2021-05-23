@@ -25,6 +25,9 @@
     <Compile Include="Encoder.py" />
     <Compile Include="EXGBoost.py" />
     <Compile Include="ModelBase.py" />
+    <Compile Include="DataAugment.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="NNetwork.py" />
     <Compile Include="Numerai.py" />
     <Compile Include="Validation.py" />

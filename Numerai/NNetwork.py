@@ -37,16 +37,16 @@ def correlation_tf(x, y):
 
 
 class NNModel(ModelBase):
-    lr = 0.001
+    lr = 1e-4
     epochs = 20000
-    batchSize = 8192
+    batchSize = 2048
 
     stopping = K.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=100,
+        patience=20,
         mode="auto",
         baseline=None,
-        min_delta=0.001,
+        min_delta=0.0002,
         restore_best_weights=True)
 
 
@@ -56,19 +56,30 @@ class NNModel(ModelBase):
                              save_best_only=True,
                              mode='min')
 
+    reduce = K.callbacks.ReduceLROnPlateau(
+        monitor="val_loss",
+        factor=0.1,
+        patience=10,
+        verbose=0,
+        mode="auto",
+        min_delta=0.0001,
+        cooldown=0,
+        min_lr=0,
+    )
+
     def __init__(self, name=None):
         if name:
             self.model = models.load_model(THIS_MODEL_PATH + name)
             return
 
         neurons = 196
-        inp = layers.Input((316,))
+        inp = layers.Input((310,))
         
         out = layers.Dense(neurons)(inp)
         out = layers.ReLU()(out)
         out = layers.BatchNormalization()(out)
-        for i in range(6):
-            out = self.addResBlock(out, neurons, 0.4)
+        for i in range(1):
+            out = self.addResBlock(out, neurons, 0.1)
 
         out = layers.Dense(neurons, 'relu')(out)
         out = layers.BatchNormalization()(out)
@@ -78,12 +89,11 @@ class NNModel(ModelBase):
         self.model = K.Model(inputs = inp, outputs = out)
 
         self.model.compile(optimizer=K.optimizers.Adam(),
-              #loss=K.losses.mean_squared_error,
-              loss=K.losses.binary_crossentropy,
+              loss=K.losses.mean_squared_error,
+              #loss=K.losses.binary_crossentropy,
               metrics=[])
 
         self.model.summary()
-
 
 
     def addResBlock(self, inp, sz, d):
@@ -111,7 +121,7 @@ class NNModel(ModelBase):
         hist = self.model.fit(x=features.values, y=targets.values, epochs=self.epochs, 
                         batch_size=self.batchSize, #steps_per_epoch=10,
                         validation_data=(valFeatures.values, valTargets.values),
-                        shuffle=True, callbacks=[self.stopping, tensorboard])
+                        shuffle=True, callbacks=[self.stopping, tensorboard, self.reduce])
 
         self.model.save(THIS_MODEL_PATH + '-{}'.format(
             round(hist.history['val_loss'][-1], 3)))

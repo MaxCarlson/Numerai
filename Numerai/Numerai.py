@@ -36,6 +36,7 @@ from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
 
 from defines import *
+from DataAugment import addFeatures, modifyPreds
 from NNetwork import NNModel
 from Encoder import AutoEncoder
 from Validation import validate, neutralize_series
@@ -55,35 +56,16 @@ NAPI = numerapi.NumerAPI(verbosity="info")
 # Download new data
 NAPI.download_current_dataset(dest_path=DIR, unzip=True)
 
-DATA_TYPE = np.float32
 
 # Read the csv file into a pandas Dataframe as float16 to save space
 def read_csv(file_path):
     with open(file_path, 'r') as f:
         column_names = next(csv.reader(f))
 
-    #dtypes = {x: np.float16 for x in column_names if x.startswith(('feature', TARGET_NAME))}
     dtypes = {x: DATA_TYPE for x in column_names if x.startswith(('feature', TARGET_NAME))}
     
     df = pd.read_csv(file_path, dtype=dtypes, index_col=0)
-    #df = pd.read_csv(file_path, dtype=float, index_col=0)
-    
     return df
-
-def addFeatures(data):
-    def norm(df):
-        return (df-df.min())/(df.max()-df.min())
-    fp = 'feature_'
-    fn = ['intelligence', 'charisma', 'strength', 'dexterity', 'constitution', 'wisdom']
-    for f in fn:
-        c = [col for col, _ in data.iteritems() if f in col]
-        data[fp + f + '_meanstd'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].std(axis=1).astype(DATA_TYPE)
-        #data[fp + f + '_meanvar'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].var(axis=1).astype(DATA_TYPE)
-        
-        #data[fp + f + '_mean'] = data[c].std(axis=1).astype(DATA_TYPE)
-       
-        #data[fp + f + '_std'] = norm(data[c].std(axis=1).astype(DATA_TYPE))
-        #data[fp + f + '_var'] = norm(data[c].var(axis=1).astype(DATA_TYPE))
 
 def loadData(path=DATASET_PATH):
 
@@ -105,32 +87,11 @@ def loadData(path=DATASET_PATH):
         f for f in training_data.columns if f.startswith("feature")]
     print(f"Loaded {len(o_feature_names)} features")
 
-    print('Augmenting Features...')
-    addFeatures(training_data)
-    addFeatures(tournament_data)
+    addFeatures(training_data, tournament_data)
 
     feature_names = [ #['era']+
         f for f in training_data.columns if f.startswith("feature")]
     print('Added {} features'.format(len(feature_names) - len(o_feature_names)))
-
-    def nu(df, target="target", by=None, proportion=1.0):
-        if by is None:
-            by = [x for x in df.columns if x.startswith('feature')]
-
-        scores = df[target]
-        exposures = df[by].values
-
-        # constant column to make sure the series is completely neutral to exposures
-        exposures = np.hstack((exposures, np.array([np.mean(scores)] * len(exposures)).reshape(-1, 1)))
-
-        scores -= proportion * (exposures @ (np.linalg.pinv(exposures) @ scores.values))
-        out = pd.DataFrame(scores / scores.std(), index=df.index)
-        print(out.shape)
-        df[target] = out
-
-    #fsp = int(len(feature_names)/2)
-    #nu(training_data, target='target', by=feature_names[:fsp])
-    #nu(training_data, target='target', by=feature_names[fsp:])
 
     validation_data = tournament_data[tournament_data.data_type == "validation"]
     return training_data, tournament_data, validation_data, feature_names, o_feature_names
@@ -181,8 +142,7 @@ if __name__ == "__main__":
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
-    #model = trainModel(training_data, tournament_data, validation_data, feature_names)
-    #model = trainModel(training_data, tournament_data, validation_data, feature_names)
+    model = trainModel(training_data, tournament_data, validation_data, feature_names)
     #tp = model.predict(training_data[feature_names])#, DATASET_PATH)
     #training_data['nnpred'] = tp
     #tp = model.predict(tournament_data[feature_names])#, DATASET_PATH)
@@ -190,7 +150,14 @@ if __name__ == "__main__":
     #feature_names += ['nnpred']
     #validation_data = tournament_data[tournament_data.data_type == "validation"]
 
-    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
+    #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
+
+    print('Starting Predictions...')
+    training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
+    tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
+    print('Predictions done...')
+
+    modifyPreds(training_data, tournament_data, feature_names)
 
     # Load non manipulated data for validation purposes
     if alteredData:
@@ -200,6 +167,8 @@ if __name__ == "__main__":
         #         afeature_names, model, training_data, tournament_data, 
         #         feature_names, savePreds=False)
     else:
+
+        # Note: we're not looking at feature exposure for new features here?
         validate(training_data, tournament_data, validation_data, 
-                 o_features_names, feature_names, model, savePreds=False)
+                 o_features_names, model, savePreds=False)
 
