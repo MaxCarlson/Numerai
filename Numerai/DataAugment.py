@@ -28,20 +28,37 @@ def norm(df):
 
 def addStatFeatures(data):
     fp = 'feature_'
-    fn = ['intelligence', 'charisma', 'strength', 'dexterity', 'constitution', 'wisdom']
+    #fn = ['intelligence', 'charisma', 'strength', 'dexterity', 'constitution', 'wisdom']
+    fn = ['constitution']#, 'constitution', 'wisdom']
+
     for f in fn:
         c = [col for col, _ in data.iteritems() if f in col]
-        data[fp + f + '_meanstd'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].std(axis=1).astype(DATA_TYPE)
+        #data[fp + f + '_meanstd'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].std(axis=1).astype(DATA_TYPE)
         #data[fp + f + '_meanvar'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].var(axis=1).astype(DATA_TYPE)
         #data[fp + f + '_mean'] = data[c].std(axis=1).astype(DATA_TYPE)
         #data[fp + f + '_std'] = norm(data[c].std(axis=1).astype(DATA_TYPE))
         #data[fp + f + '_var'] = norm(data[c].var(axis=1).astype(DATA_TYPE))
 
+        # TODO: Add rolling (by era) feature means/var/std etc
+        
+        out = data[['era'] + c].groupby("era")[c].apply(lambda x: x.mean(axis=0).astype(DATA_TYPE))
+        out = data[['era'] + c].groupby("era")[c].transform(lambda x: x.std(axis=0).astype(DATA_TYPE))
+
+        out.columns = [column + '_erastd' for column in out.columns]
+        data = pd.concat([data, out], axis=1)
+        #print(data)
+        #cols = [[x + '_eramean'] for x in c]
+        #df = pd.DataFrame(out, columns=cols)
+        
+    return data
+
 def addFeatures(training_data, tournament_data):
     print('Augmenting Features...')
     
-    #addStatFeatures(training_data)
-    #addStatFeatures(tournament_data)
+    training_data = addStatFeatures(training_data)
+    tournament_data = addStatFeatures(tournament_data)
+
+    return training_data, tournament_data
 
 
 def modifyPreds(training_data, tournament_data, all_feature_names):

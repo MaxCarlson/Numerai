@@ -87,7 +87,7 @@ def loadData(path=DATASET_PATH):
         f for f in training_data.columns if f.startswith("feature")]
     print(f"Loaded {len(o_feature_names)} features")
 
-    addFeatures(training_data, tournament_data)
+    training_data, tournament_data = addFeatures(training_data, tournament_data)
 
     feature_names = [ #['era']+
         f for f in training_data.columns if f.startswith("feature")]
@@ -142,7 +142,8 @@ if __name__ == "__main__":
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
-    model = trainModel(training_data, tournament_data, validation_data, feature_names)
+    #model = trainModel(training_data, tournament_data, validation_data, feature_names)
+    #model = trainModel(training_data, tournament_data, validation_data, feature_names, '-0.051')
     #tp = model.predict(training_data[feature_names])#, DATASET_PATH)
     #training_data['nnpred'] = tp
     #tp = model.predict(tournament_data[feature_names])#, DATASET_PATH)
@@ -150,14 +151,14 @@ if __name__ == "__main__":
     #feature_names += ['nnpred']
     #validation_data = tournament_data[tournament_data.data_type == "validation"]
 
-    #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
+    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
 
     print('Starting Predictions...')
     training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
     print('Predictions done...')
 
-    modifyPreds(training_data, tournament_data, feature_names)
+    #modifyPreds(training_data, tournament_data, feature_names)
 
     # Load non manipulated data for validation purposes
     if alteredData:

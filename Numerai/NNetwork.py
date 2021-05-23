@@ -39,7 +39,7 @@ def correlation_tf(x, y):
 class NNModel(ModelBase):
     lr = 1e-4
     epochs = 20000
-    batchSize = 2048
+    batchSize = 512
 
     stopping = K.callbacks.EarlyStopping(
         monitor="val_loss",
@@ -106,7 +106,7 @@ class NNModel(ModelBase):
         mt = layers.ReLU()(m)
         mt = layers.BatchNormalization()(mt)
         mt = layers.Dropout(d)(mt)
-        return layers.Add()([inp, mt])
+        return mt #layers.Add()([inp, mt])
 
     #def addDenseBlock(self, sz):
     #    self.model.add(layers.Dense(sz))
@@ -124,7 +124,7 @@ class NNModel(ModelBase):
                         shuffle=True, callbacks=[self.stopping, tensorboard, self.reduce])
 
         self.model.save(THIS_MODEL_PATH + '-{}'.format(
-            round(hist.history['val_loss'][-1], 3)))
+            round(np.min(hist.history['val_loss']), 3)))
 
         NNModel.plotLoss('training', hist)
 
