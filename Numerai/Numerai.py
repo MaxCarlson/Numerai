@@ -18,9 +18,10 @@
 # Best ideas
 # Group datasets by eras. Train on all eras, then perform boosting on more difficult eras
 # (eras with low target correlation)!!!
-# Feature neutralization
+# Feature neutralization (try neutralizing on per era basis)
 # Train encoder with custom loss function set to maximize output correlation to target?
 # Boost NN model with scikit-learn AdaBoostRegressor
+# Add NN outputs into input data for XGBoost
 
 # TODO
 # Switch to pd.HDFStore('numera_training_data.h5')
@@ -70,15 +71,19 @@ def read_csv(file_path):
     return df
 
 def addFeatures(data):
+    def norm(df):
+        return (df-df.min())/(df.max()-df.min())
     fp = 'feature_'
     fn = ['intelligence', 'charisma', 'strength', 'dexterity', 'constitution', 'wisdom']
     for f in fn:
         c = [col for col, _ in data.iteritems() if f in col]
-        data[fp + f + '_meanvar'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].var(axis=1).astype(DATA_TYPE)
-        #data[fp + f + '_meanstd'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].std(axis=1).astype(DATA_TYPE)
+        data[fp + f + '_meanstd'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].std(axis=1).astype(DATA_TYPE)
+        #data[fp + f + '_meanvar'] = data[c].mean(axis=1).astype(DATA_TYPE) * data[c].var(axis=1).astype(DATA_TYPE)
         
-        #data[fp + f + '_std'] = data[c].std(axis=1).astype(DATA_TYPE)
-        #data[fp + f + '_var'] = data[c].var(axis=1).astype(DATA_TYPE)
+        #data[fp + f + '_mean'] = data[c].std(axis=1).astype(DATA_TYPE)
+       
+        #data[fp + f + '_std'] = norm(data[c].std(axis=1).astype(DATA_TYPE))
+        #data[fp + f + '_var'] = norm(data[c].var(axis=1).astype(DATA_TYPE))
 
 def loadData(path=DATASET_PATH):
 
@@ -95,7 +100,6 @@ def loadData(path=DATASET_PATH):
         tournament_data = pd.read_hdf(path + "data.h5", key='tournament')
 
 
-    validation_data = tournament_data[tournament_data.data_type == "validation"]
     #printCorrelation(training_data)
     o_feature_names = [ #['era']+
         f for f in training_data.columns if f.startswith("feature")]
@@ -109,14 +113,7 @@ def loadData(path=DATASET_PATH):
         f for f in training_data.columns if f.startswith("feature")]
     print('Added {} features'.format(len(feature_names) - len(o_feature_names)))
 
-    #def nu(data):
-    #    for f in feature_names:
-    #        data[f] = neutralize_series(data[f], data[TARGET_NAME])
-    #
-    #nu(training_data)
-    #nu(tournament_data)
-
-    def nu(df, target="resp", by=None, proportion=1.0):
+    def nu(df, target="target", by=None, proportion=1.0):
         if by is None:
             by = [x for x in df.columns if x.startswith('feature')]
 
@@ -128,12 +125,14 @@ def loadData(path=DATASET_PATH):
 
         scores -= proportion * (exposures @ (np.linalg.pinv(exposures) @ scores.values))
         out = pd.DataFrame(scores / scores.std(), index=df.index)
-        df[by] = out
+        print(out.shape)
+        df[target] = out
 
-    fsp = int(len(feature_names)/2)
-    nu(training_data, target='target', by=feature_names[:fsp])
-    nu(training_data, target='target', by=feature_names[fsp:])
+    #fsp = int(len(feature_names)/2)
+    #nu(training_data, target='target', by=feature_names[:fsp])
+    #nu(training_data, target='target', by=feature_names[fsp:])
 
+    validation_data = tournament_data[tournament_data.data_type == "validation"]
     return training_data, tournament_data, validation_data, feature_names, o_feature_names
 
 def runAE(training_data, tournament_data, validation_data, feature_names, 
@@ -182,8 +181,15 @@ if __name__ == "__main__":
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
-    #model = trainModel(training_data, tournament_data, validation_data, feature_names, '-0.693')
     #model = trainModel(training_data, tournament_data, validation_data, feature_names)
+    #model = trainModel(training_data, tournament_data, validation_data, feature_names)
+    #tp = model.predict(training_data[feature_names])#, DATASET_PATH)
+    #training_data['nnpred'] = tp
+    #tp = model.predict(tournament_data[feature_names])#, DATASET_PATH)
+    #tournament_data['nnpred'] = tp
+    #feature_names += ['nnpred']
+    #validation_data = tournament_data[tournament_data.data_type == "validation"]
+
     model = trainXGBoost(training_data, tournament_data, validation_data, feature_names)
 
     # Load non manipulated data for validation purposes

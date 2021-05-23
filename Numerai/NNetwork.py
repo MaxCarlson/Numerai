@@ -39,14 +39,14 @@ def correlation_tf(x, y):
 class NNModel(ModelBase):
     lr = 0.001
     epochs = 20000
-    batchSize = 4096
+    batchSize = 8192
 
     stopping = K.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=20,
+        patience=100,
         mode="auto",
         baseline=None,
-        min_delta=0.0001,
+        min_delta=0.001,
         restore_best_weights=True)
 
 
@@ -61,27 +61,21 @@ class NNModel(ModelBase):
             self.model = models.load_model(THIS_MODEL_PATH + name)
             return
 
-        neurons = 128
-        inp = layers.Input((128,))
+        neurons = 196
+        inp = layers.Input((316,))
         
-        out = self.addResBlock(inp, neurons, 0.2)
-        for i in range(15):
-            out = self.addResBlock(out, neurons, 0.2)
+        out = layers.Dense(neurons)(inp)
+        out = layers.ReLU()(out)
+        out = layers.BatchNormalization()(out)
+        for i in range(6):
+            out = self.addResBlock(out, neurons, 0.4)
 
         out = layers.Dense(neurons, 'relu')(out)
         out = layers.BatchNormalization()(out)
-        out = layers.Dropout(0.2)(out)
         out = layers.Dense(1)(out)
         out = K.activations.sigmoid(out)
 
         self.model = K.Model(inputs = inp, outputs = out)
-        #self.model = models.Sequential()
-        #self.model.add(K.Input(shape=(310,)))
-        #for i in range(8):
-        #    self.addDenseBlock(96)
-        #
-        #self.model.add(layers.Dense(1))
-        #self.model.add(layers.Activation(K.activations.sigmoid))
 
         self.model.compile(optimizer=K.optimizers.Adam(),
               #loss=K.losses.mean_squared_error,
@@ -102,7 +96,7 @@ class NNModel(ModelBase):
         mt = layers.ReLU()(m)
         mt = layers.BatchNormalization()(mt)
         mt = layers.Dropout(d)(mt)
-        return layers.Add()([m, mt])
+        return layers.Add()([inp, mt])
 
     #def addDenseBlock(self, sz):
     #    self.model.add(layers.Dense(sz))
@@ -124,6 +118,10 @@ class NNModel(ModelBase):
 
         NNModel.plotLoss('training', hist)
 
-    def predict(self, features):
+    def predict(self, features, savePath=None):
         p = self.model.predict(x=features.values)
-        return p
+        if not savePath:
+            return p
+        #p = pd.DataFrame(p, index=features.index, columns='feature_nnpred')
+        #p.to_hdf(savePath + "data.h5", key='nnout')
+
