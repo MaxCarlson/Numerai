@@ -41,6 +41,7 @@ from NNetwork import NNModel
 from Encoder import AutoEncoder
 from Validation import validate, neutralize_series
 from EXGBoost import EXGBoost
+from GridSearch import gridSearch
 
 warnings.filterwarnings('ignore')
 
@@ -140,6 +141,8 @@ if __name__ == "__main__":
         training_data, tournament_data, validation_data, feature_names, o_features_names = loadData()
 
 
+    gridSearch(training_data, validation_data, feature_names)
+
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
@@ -159,7 +162,7 @@ if __name__ == "__main__":
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
     print('Predictions done...')
 
-    #modifyPreds(training_data, tournament_data, feature_names)
+    modifyPreds(training_data, tournament_data, feature_names)
 
     # Load non manipulated data for validation purposes
     if alteredData:
@@ -172,5 +175,5 @@ if __name__ == "__main__":
 
         # Note: we're not looking at feature exposure for new features here?
         validate(training_data, tournament_data, validation_data, 
-                 o_features_names, model, savePreds=False)
+                 o_features_names, model, savePreds=True)
 

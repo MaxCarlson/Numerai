@@ -28,6 +28,9 @@
     <Compile Include="DataAugment.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="GridSearch.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="NNetwork.py" />
     <Compile Include="Numerai.py" />
     <Compile Include="Validation.py" />

@@ -58,19 +58,11 @@ def validate(training_data, tournament_data, validation_data,
     print(f"Feature Neutral Mean is {feature_neutral_mean}")
 
     # Load example preds to get MMC metrics
-    example_preds = pd.read_csv(DATASET_PATH + "example_predictions.csv").set_index("id")["prediction"]
-    validation_example_preds = example_preds.loc[validation_data.index]
-    validation_data["ExamplePreds"] = validation_example_preds
+    validation_data = load_example_data(validation_data)
 
     print("calculating MMC stats...")
     # MMC over validation
-    mmc_scores = []
-    corr_scores = []
-    for _, x in validation_data.groupby("era"):
-        series = neutralize_series(pd.Series(unif(x[PREDICTION_NAME])),
-                                   pd.Series(unif(x["ExamplePreds"])))
-        mmc_scores.append(np.cov(series, x[TARGET_NAME])[0, 1] / (0.29 ** 2))
-        corr_scores.append(correlation(unif(x[PREDICTION_NAME]), x[TARGET_NAME]))
+    mmc_scores, corr_scores = mmc_stats(validation_data)
 
     val_mmc_mean = np.mean(mmc_scores)
     val_mmc_std = np.std(mmc_scores)
@@ -96,6 +88,23 @@ def validate(training_data, tournament_data, validation_data,
     if savePreds:
         print('Saving Submissions...')
         tournament_data[PREDICTION_NAME].to_csv("submission.csv", header=True)
+
+def load_example_data(validation_data):
+    example_preds = pd.read_csv(DATASET_PATH + "example_predictions.csv").set_index("id")["prediction"]
+    validation_example_preds = example_preds.loc[validation_data.index]
+    validation_data["ExamplePreds"] = validation_example_preds
+    return validation_data
+
+def mmc_stats(validation_data):
+    # MMC over validation
+    mmc_scores = []
+    corr_scores = []
+    for _, x in validation_data.groupby("era"):
+        series = neutralize_series(pd.Series(unif(x[PREDICTION_NAME])),
+                                   pd.Series(unif(x["ExamplePreds"])))
+        mmc_scores.append(np.cov(series, x[TARGET_NAME])[0, 1] / (0.29 ** 2))
+        corr_scores.append(correlation(unif(x[PREDICTION_NAME]), x[TARGET_NAME]))
+    return mmc_scores, corr_scores
 
 
 # to neutralize a column in a df by many other columns on a per-era basis
