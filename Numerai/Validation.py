@@ -58,7 +58,7 @@ def validate(training_data, tournament_data, validation_data,
     print(f"Feature Neutral Mean is {feature_neutral_mean}")
 
     # Load example preds to get MMC metrics
-    validation_data = load_example_data(validation_data)
+    validation_data, validation_example_preds = load_example_data(validation_data)
 
     print("calculating MMC stats...")
     # MMC over validation
@@ -93,7 +93,7 @@ def load_example_data(validation_data):
     example_preds = pd.read_csv(DATASET_PATH + "example_predictions.csv").set_index("id")["prediction"]
     validation_example_preds = example_preds.loc[validation_data.index]
     validation_data["ExamplePreds"] = validation_example_preds
-    return validation_data
+    return validation_data, validation_example_preds
 
 def mmc_stats(validation_data):
     # MMC over validation

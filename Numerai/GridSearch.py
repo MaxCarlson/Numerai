@@ -8,17 +8,18 @@ from sklearn.model_selection import GridSearchCV
 from defines import *
 from Validation import score, load_example_data, mmc_stats
 
-def xgbScore(_, __):
-    correlations = validation_data.groupby("era").apply(score)
-
-
 xgb_param_grid = {
-    'n_estimators': [1500, 2500, 3500],
-    'colsample_bytree': [0.1, 0.25, 0.4, 0.6],
-    'max_depth': [4,5,6,7],
-    'reg_alpha': [0, 0.5, 1, 5, 10],
-    'reg_lambda': [1, 1.15, 1.25, 1.4],
-    'subsample': [0.3, 0.5, 1]
+    #'n_estimators': [2500, 3000, 3500],
+    #'learning_rate' : [0.001, 0.01],
+    #'max_depth': [4,5,6],
+    #'objective': ['reg:squarederror', 'reg:squaredlogerror', 'reg:logistic', 'reg:pseudohubererror']
+    'colsample_bytree': [0.15, 0.25],
+    'reg_alpha': [0, 7],
+    'reg_lambda': [1, 1.25, 1.5],
+    'subsample': [0.5, 0.85],
+    'max_depth': [5], 
+    'n_estimators': [3000], 
+    'learning_rate': [0.01] 
 }
 
 def gridSearch(training_data, validation_data, feature_names, 
@@ -45,11 +46,12 @@ def gridSearch(training_data, validation_data, feature_names,
         val_mmc_mean = np.mean(mmc_scores)
 
         newScore = validation_mean + val_mmc_mean
-        if score > bestScore:
+        print(f'Score: {newScore} for {g}')
+        if newScore > bestScore:
             bestParams = (*g,)
             bestScore = newScore
-            print(f'Best score so far... {newScore}')
-            print(f'from params {(*g,)}')
+            print(f'\nBest score so far... {newScore}')
+            print(f'from params {g}\n')
 
     return
 

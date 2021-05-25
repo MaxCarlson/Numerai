@@ -21,6 +21,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Analysis.py" />
     <Compile Include="defines.py" />
     <Compile Include="Encoder.py" />
     <Compile Include="EXGBoost.py" />

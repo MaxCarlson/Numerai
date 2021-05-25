@@ -7,6 +7,8 @@ from keras import models
 from matplotlib import pyplot as plt
 from ModelBase import ModelBase
 
+import torch
+from pytorch_tabnet.tab_model import TabNetRegressor
 from defines import *
 
 #tensorboard --logdir logs/fit
@@ -72,28 +74,45 @@ class NNModel(ModelBase):
             self.model = models.load_model(THIS_MODEL_PATH + name)
             return
 
-        neurons = 196
-        inp = layers.Input((310,))
+        #neurons = 196
+        #inp = layers.Input((310,))
+        #
+        #out = layers.Dense(neurons)(inp)
+        #out = layers.ReLU()(out)
+        #out = layers.BatchNormalization()(out)
+        #out = layers.Dense(neurons)(out)
+        #out = layers.ReLU()(out)
+        #out = layers.BatchNormalization()(out)
+        #out = layers.Dense(neurons)(out)
+        #out = layers.ReLU()(out)
+        #out = layers.BatchNormalization()(out)
+        #
+        #out = layers.Dense(neurons, 'relu')(out)
+        #out = layers.BatchNormalization()(out)
+        #out = layers.Dense(1)(out)
+        #out = K.activations.sigmoid(out)
+        #
+        #self.model = K.Model(inputs = inp, outputs = out)
+        #
+        #self.model.compile(optimizer=K.optimizers.Adam(),
+        #      loss=K.losses.mean_squared_error,
+        #      #loss=K.losses.binary_crossentropy,
+        #      metrics=[])
         
-        out = layers.Dense(neurons)(inp)
-        out = layers.ReLU()(out)
-        out = layers.BatchNormalization()(out)
-        for i in range(1):
-            out = self.addResBlock(out, neurons, 0.1)
+        #lr_sch = torch.optim.lr_scheduler.ReduceLROnPlateau(torch.optim.Adam,  
+        lr_sch = torch.optim.lr_scheduler.ExponentialLR
 
-        out = layers.Dense(neurons, 'relu')(out)
-        out = layers.BatchNormalization()(out)
-        out = layers.Dense(1)(out)
-        out = K.activations.sigmoid(out)
-
-        self.model = K.Model(inputs = inp, outputs = out)
-
-        self.model.compile(optimizer=K.optimizers.Adam(),
-              loss=K.losses.mean_squared_error,
-              #loss=K.losses.binary_crossentropy,
-              metrics=[])
-
-        self.model.summary()
+        self.model = TabNetRegressor(device_name='cuda', n_d=8, n_a=8, 
+                                     n_steps=5, lambda_sparse=0.0001, gamma=1.5,
+                                     optimizer_params=dict(lr=0.004), 
+                                     scheduler_fn=lr_sch, scheduler_params={'gamma': 0.94})#, 'verbose': True})
+        torch.cuda.set_device(0)
+        return
+        #for i in range(1):
+        #    out = self.addResBlock(out, neurons, 0.1)
+        #
+        #
+        #self.model.summary()
 
 
     def addResBlock(self, inp, sz, d):
@@ -118,20 +137,28 @@ class NNModel(ModelBase):
         #features['era'] = features['era'].apply(lambda x: (float(x[3:]) / features.shape[0]))
         #valFeatures['era'] = valFeatures['era'].apply(lambda x: (float(x[3:]) / valFeatures.shape[0]))
 
-        hist = self.model.fit(x=features.values, y=targets.values, epochs=self.epochs, 
-                        batch_size=self.batchSize, #steps_per_epoch=10,
-                        validation_data=(valFeatures.values, valTargets.values),
-                        shuffle=True, callbacks=[self.stopping, tensorboard, self.reduce])
+        self.model.device_name ='cuda'
+        self.model.fit(features.values, targets.values.reshape(-1,1), eval_set=[
+            (features.values, targets.values.reshape(-1,1)),
+            (valFeatures.values, valTargets.values.reshape(-1,1))],
+                       eval_name=['train', 'valid'],
+                       eval_metric=['mse'],#'rmse', 'mae', 
+                       batch_size=2048, virtual_batch_size=256, num_workers=0)
+        self.model.save_model('tabnet.mdl')
 
-        self.model.save(THIS_MODEL_PATH + '-{}'.format(
-            round(np.min(hist.history['val_loss']), 3)))
-
-        NNModel.plotLoss('training', hist)
+        #hist = self.model.fit(x=features.values, y=targets.values, epochs=self.epochs, 
+        #                batch_size=self.batchSize, #steps_per_epoch=10,
+        #                validation_data=(valFeatures.values, valTargets.values),
+        #                shuffle=True, callbacks=[self.stopping, tensorboard, self.reduce])
+        #
+        #self.model.save(THIS_MODEL_PATH + '-{}'.format(
+        #    round(np.min(hist.history['val_loss']), 3)))
+        #
+        #NNModel.plotLoss('training', hist)
 
     def predict(self, features, savePath=None):
-        p = self.model.predict(x=features.values)
-        if not savePath:
-            return p
-        #p = pd.DataFrame(p, index=features.index, columns='feature_nnpred')
-        #p.to_hdf(savePath + "data.h5", key='nnout')
+        self.model.load_model('tabnet.mdl.zip')
+        p = self.model.predict(features.values)
+        #p = self.model.predict(x=features.values)
+        return p
 

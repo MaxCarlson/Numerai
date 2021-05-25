@@ -42,6 +42,7 @@ from Encoder import AutoEncoder
 from Validation import validate, neutralize_series
 from EXGBoost import EXGBoost
 from GridSearch import gridSearch
+from Analysis import MDA
 
 warnings.filterwarnings('ignore')
 
@@ -129,7 +130,8 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
 def trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False):
     model = EXGBoost(loadModel)
     if not loadModel:
-        model.fit(training_data[feature_names], training_data[TARGET_NAME])
+        model.fit(training_data[feature_names], training_data[TARGET_NAME], 
+                  validation_data[feature_names], validation_data[TARGET_NAME])
     return model
 
 if __name__ == "__main__":
@@ -141,7 +143,7 @@ if __name__ == "__main__":
         training_data, tournament_data, validation_data, feature_names, o_features_names = loadData()
 
 
-    gridSearch(training_data, validation_data, feature_names)
+    #gridSearch(training_data, validation_data, feature_names)
 
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
@@ -162,7 +164,9 @@ if __name__ == "__main__":
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
     print('Predictions done...')
 
-    modifyPreds(training_data, tournament_data, feature_names)
+    #MDA(model, feature_names, validation_data)
+    #modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
+
 
     # Load non manipulated data for validation purposes
     if alteredData:
