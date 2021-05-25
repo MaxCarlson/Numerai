@@ -17,13 +17,45 @@ def corrAndStd(df):
     corrs = df.groupby("era").apply(score)
     return corrs.mean(), corrs.std(ddof=0)
 
-def graphPerEraCorrSharpe(data):
+def graphPerEraCorrSharpe(data, multi=1, mmc_mult=0.5):
     corrs = data.groupby("era").apply(score)
-    sharp = corrs.mean() / corrs.std(ddof=0)
-    corrs = corrs.mean()
-    X = [x for x in range(pd.unique(corrs['era']))]
-    plt.plot(x=X, y=corrs)
-    plt.plot(x=X, y=sharp)
+    #sharp = corrs.mean() / corrs.std(ddof=0)
+    load_example_data(data)
+    mmcs, corr_scores = mmc_stats(data)
+    X = [x for x in range(len(corrs))]
+
+    def calcPayouts(corr_mult, mmc_mult):
+        payout = []
+        base = 1.0
+        for corr, mmc in zip(corrs, mmcs):
+            base += base * multi * (corr + mmc * mmc_mult)
+            payout.append(base)
+        return payout
+
+    fig, (ax1, ax3, ax5) = plt.subplots(1, 3)
+    def graph(ax, data, color, xlabel, ylabel):
+        ax.set_xlabel(xlabel)
+        ax.plot(X, data, color=color)
+        ax.set_ylabel(ylabel, color=color)
+        ax.tick_params(axis='y', labelcolor=color)
+    
+    # Plot correlation and payout by era
+    graph(ax1, corrs, 'tab:blue', 'Era', 'corr')
+    ax2 = ax1.twinx()
+    graph(ax2, calcPayouts(1, 0), 'tab:red', 'Era', 'Payout over time')
+
+    # Plot mmc and mmc payout by era
+    graph(ax3, mmcs, 'tab:blue', 'Era', 'mmc')
+    ax4 = ax3.twinx()
+    graph(ax4, calcPayouts(0, 1), 'tab:red', 'Era', 'Payout over time')
+
+    # Plot corr+mmc payout
+    graph(ax5, calcPayout(1, mmc_mult), 'tab:red', 'Era', 'Payout')
+
+    #fig.tight_layout()
+    ax1.set_title(f'corr/payout')
+    ax3.set_title(f'mmc/mmc payout mmc={1}')
+    ax5.set_title(f'mmc+corr payout mmc={mmc_mult}')
     plt.show()
 
 # Payout is just the score cliped at +/-25%
@@ -41,7 +73,6 @@ def validate(training_data, tournament_data, validation_data,
 
     """Validation Metrics"""
     # Check the per-era correlations on the validation set (out of sample)
-    validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
     validation_correlations = validation_data.groupby("era").apply(score)
     print(f"On validation the correlation has mean {validation_correlations.mean()} and "
           f"std {validation_correlations.std(ddof=0)}")

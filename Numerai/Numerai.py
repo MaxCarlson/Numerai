@@ -163,10 +163,11 @@ if __name__ == "__main__":
     print('Starting Predictions...')
     training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
+    validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
     print('Predictions done...')
 
-    applyAnalysis(model, feature_names, validation_data)
     #modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
+    applyAnalysis(model, feature_names, validation_data)
 
 
     # Load non manipulated data for validation purposes
