@@ -1,6 +1,7 @@
 import sklearn
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from defines import *
 
 # Submissions are scored by spearman correlation
@@ -11,6 +12,19 @@ def correlation(predictions, targets):
 # convenience method for scoring
 def score(df):
     return correlation(df[PREDICTION_NAME], df[TARGET_NAME])
+
+def corrAndStd(df):
+    corrs = df.groupby("era").apply(score)
+    return corrs.mean(), corrs.std(ddof=0)
+
+def graphPerEraCorrSharpe(data):
+    corrs = data.groupby("era").apply(score)
+    sharp = corrs.mean() / corrs.std(ddof=0)
+    corrs = corrs.mean()
+    X = [x for x in range(pd.unique(corrs['era']))]
+    plt.plot(x=X, y=corrs)
+    plt.plot(x=X, y=sharp)
+    plt.show()
 
 # Payout is just the score cliped at +/-25%
 def payout(scores):

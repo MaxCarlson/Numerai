@@ -1,11 +1,17 @@
+import shap
 import numpy as np
 import pandas as pd
-from Validation import score
+from defines import *
+from Validation import corrAndStd, graphPerEraCorrSharpe
 
+# Note, we can't drop features here just based on validation data!
+# Need to perform cross validation and look at common drops across all cv sets
+#
+# Mean Descreas Accuracy
 def MDA(model, features, testSet):
     
-    testSet['pred'] = model.predict(testSet[features])   # predict with a pre-fitted model on an OOS validation set
-    corr, std = score(testSet)  # save base scores
+    testSet[PREDICTION_NAME] = model.predict(testSet[features])   # predict with a pre-fitted model on an OOS validation set
+    corr, std = corrAndStd(testSet)  # save base scores
     print("Base corr: ", corr)
     diff = []
     np.random.seed(42)
@@ -13,9 +19,29 @@ def MDA(model, features, testSet):
 
         X = testSet.copy()
         np.random.shuffle(X[col].values)    # shuffle the a selected feature column, while maintaining the distribution of the feature
-        testSet['pred'] = model.predict(X[features]) # run prediction with the same pre-fitted model, with one shuffled feature
-        corrX, stdX = num.numerai_score(testSet)  # compare scores...
-        print(col, corrX-corr)
+        testSet[PREDICTION_NAME] = model.predict(X[features]) # run prediction with the same pre-fitted model, with one shuffled feature
+        corrX, stdX = corrAndStd(testSet)  # compare scores...
+        print(col, '{:4f}'.format(corrX-corr))
         diff.append((col, corrX-corr))
         
     return diff
+
+def applyShap(model, feature_names, dataset):
+    # explain the model's predictions using SHAP
+    # (same syntax works for LightGBM, CatBoost, scikit-learn, transformers, Spark, etc.)
+    explainer = shap.Explainer(model.model)
+    shap_values = explainer(dataset[feature_names])
+
+    # visualize the first prediction's explanation
+
+    shap.plots.waterfall(shap_values[0])
+    shap.plots.beeswarm(shap_values)
+
+
+def applyAnalysis(model, feature_names, dataset):
+    #MDA(model, feature_names, dataset)
+    #applyShap(model, feature_names, dataset)
+
+    graphPerEraCorrSharpe(dataset)
+
+  

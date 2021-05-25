@@ -42,7 +42,7 @@ from Encoder import AutoEncoder
 from Validation import validate, neutralize_series
 from EXGBoost import EXGBoost
 from GridSearch import gridSearch
-from Analysis import MDA
+from Analysis import applyAnalysis
 
 warnings.filterwarnings('ignore')
 
@@ -157,14 +157,15 @@ if __name__ == "__main__":
     #feature_names += ['nnpred']
     #validation_data = tournament_data[tournament_data.data_type == "validation"]
 
-    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False)
+    #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False)
+    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=True)
 
     print('Starting Predictions...')
     training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
     print('Predictions done...')
 
-    #MDA(model, feature_names, validation_data)
+    applyAnalysis(model, feature_names, validation_data)
     #modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
 
 
