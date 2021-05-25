@@ -1,6 +1,7 @@
 import sklearn
 import numpy as np
 import pandas as pd
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from defines import *
 
@@ -50,7 +51,14 @@ def graphPerEraCorrSharpe(data, multi=1, mmc_mult=0.5):
     graph(ax4, calcPayouts(0, 1), 'tab:red', 'Era', 'Payout over time')
 
     # Plot corr+mmc payout
-    graph(ax5, calcPayout(1, mmc_mult), 'tab:red', 'Era', 'Payout')
+    colormap = np.array(['b', 'g', 'r', 'm'])
+    patches = [mpatches.Patch(color=c, label=l) for c,l in zip(
+        colormap, ['mmc=0', 'mmc=0.5', 'mmc=1', 'mmc=2'])]
+    ax5.legend(handles=patches)
+    graph(ax5, calcPayouts(1, 0), colormap[0],'Era', 'Payout')
+    graph(ax5, calcPayouts(1, 0.5), colormap[1],'Era', 'Payout')
+    graph(ax5, calcPayouts(1, 1), colormap[2], 'Era', 'Payout')
+    graph(ax5, calcPayouts(1, 2), colormap[3], 'Era', 'Payout')
 
     #fig.tight_layout()
     ax1.set_title(f'corr/payout')
