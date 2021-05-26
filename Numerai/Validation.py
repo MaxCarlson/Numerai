@@ -18,54 +18,6 @@ def corrAndStd(df):
     corrs = df.groupby("era").apply(score)
     return corrs.mean(), corrs.std(ddof=0)
 
-def graphPerEraCorrSharpe(data, multi=1, mmc_mult=0.5):
-    corrs = data.groupby("era").apply(score)
-    #sharp = corrs.mean() / corrs.std(ddof=0)
-    load_example_data(data)
-    mmcs, corr_scores = mmc_stats(data)
-    X = [x for x in range(len(corrs))]
-
-    def calcPayouts(corr_mult, mmc_mult):
-        payout = []
-        base = 1.0
-        for corr, mmc in zip(corrs, mmcs):
-            base += base * multi * (corr + mmc * mmc_mult)
-            payout.append(base)
-        return payout
-
-    fig, (ax1, ax3, ax5) = plt.subplots(1, 3)
-    def graph(ax, data, color, xlabel, ylabel):
-        ax.set_xlabel(xlabel)
-        ax.plot(X, data, color=color)
-        ax.set_ylabel(ylabel, color=color)
-        ax.tick_params(axis='y', labelcolor=color)
-    
-    # Plot correlation and payout by era
-    graph(ax1, corrs, 'tab:blue', 'Era', 'corr')
-    ax2 = ax1.twinx()
-    graph(ax2, calcPayouts(1, 0), 'tab:red', 'Era', 'Payout over time')
-
-    # Plot mmc and mmc payout by era
-    graph(ax3, mmcs, 'tab:blue', 'Era', 'mmc')
-    ax4 = ax3.twinx()
-    graph(ax4, calcPayouts(0, 1), 'tab:red', 'Era', 'Payout over time')
-
-    # Plot corr+mmc payout
-    colormap = np.array(['b', 'g', 'r', 'm'])
-    patches = [mpatches.Patch(color=c, label=l) for c,l in zip(
-        colormap, ['mmc=0', 'mmc=0.5', 'mmc=1', 'mmc=2'])]
-    ax5.legend(handles=patches)
-    graph(ax5, calcPayouts(1, 0), colormap[0],'Era', 'Payout')
-    graph(ax5, calcPayouts(1, 0.5), colormap[1],'Era', 'Payout')
-    graph(ax5, calcPayouts(1, 1), colormap[2], 'Era', 'Payout')
-    graph(ax5, calcPayouts(1, 2), colormap[3], 'Era', 'Payout')
-
-    #fig.tight_layout()
-    ax1.set_title(f'corr/payout')
-    ax3.set_title(f'mmc/mmc payout mmc={1}')
-    ax5.set_title(f'mmc+corr payout mmc={mmc_mult}')
-    plt.show()
-
 # Payout is just the score cliped at +/-25%
 def payout(scores):
     return scores.clip(lower=-0.25, upper=0.25)
@@ -75,9 +27,12 @@ def validate(training_data, tournament_data, validation_data,
 
 
     # Check the per-era correlations on the training set (in sample)
-    train_correlations = training_data.groupby("era").apply(score)
+    if 'era' in training_data.columns:
+        train_correlations = training_data.groupby("era").apply(score)
+        print(f"On training the average per-era payout is {payout(train_correlations).mean()}")
+    else:
+        train_correlations = score(training_data)
     print(f"On training the correlation has mean {train_correlations.mean()} and std {train_correlations.std(ddof=0)}")
-    print(f"On training the average per-era payout is {payout(train_correlations).mean()}")
 
     """Validation Metrics"""
     # Check the per-era correlations on the validation set (out of sample)
@@ -228,3 +183,55 @@ def get_feature_neutral_mean(df):
     scores = df.groupby("era").apply(
         lambda x: correlation(x["neutral_sub"], x[TARGET_NAME])).mean()
     return np.mean(scores)
+
+#################################################################################
+## User Stuff                                                                  ##
+#################################################################################
+
+def graphPerEraCorrSharpe(data, multi=1, mmc_mult=0.5):
+    corrs = data.groupby("era").apply(score)
+    #sharp = corrs.mean() / corrs.std(ddof=0)
+    load_example_data(data)
+    mmcs, corr_scores = mmc_stats(data)
+    X = [x for x in range(len(corrs))]
+
+    def calcPayouts(corr_mult, mmc_mult):
+        payout = []
+        base = 1.0
+        for corr, mmc in zip(corrs, mmcs):
+            base += base * multi * (corr + mmc * mmc_mult)
+            payout.append(base)
+        return payout
+
+    fig, (ax1, ax3, ax5) = plt.subplots(1, 3)
+    def graph(ax, data, color, xlabel, ylabel):
+        ax.set_xlabel(xlabel)
+        ax.plot(X, data, color=color)
+        ax.set_ylabel(ylabel, color=color)
+        ax.tick_params(axis='y', labelcolor=color)
+    
+    # Plot correlation and payout by era
+    graph(ax1, corrs, 'tab:blue', 'Era', 'corr')
+    ax2 = ax1.twinx()
+    graph(ax2, calcPayouts(1, 0), 'tab:red', 'Era', 'Payout over time')
+
+    # Plot mmc and mmc payout by era
+    graph(ax3, mmcs, 'tab:blue', 'Era', 'mmc')
+    ax4 = ax3.twinx()
+    graph(ax4, calcPayouts(0, 1), 'tab:red', 'Era', 'Payout over time')
+
+    # Plot corr+mmc payout
+    colormap = np.array(['b', 'g', 'r', 'm'])
+    patches = [mpatches.Patch(color=c, label=l) for c,l in zip(
+        colormap, ['mmc=0', 'mmc=0.5', 'mmc=1', 'mmc=2'])]
+    ax5.legend(handles=patches)
+    graph(ax5, calcPayouts(1, 0), colormap[0],'Era', 'Payout')
+    graph(ax5, calcPayouts(1, 0.5), colormap[1],'Era', 'Payout')
+    graph(ax5, calcPayouts(1, 1), colormap[2], 'Era', 'Payout')
+    graph(ax5, calcPayouts(1, 2), colormap[3], 'Era', 'Payout')
+
+    #fig.tight_layout()
+    ax1.set_title(f'corr/payout')
+    ax3.set_title(f'mmc/mmc payout mmc={1}')
+    ax5.set_title(f'mmc+corr payout mmc={mmc_mult}')
+    plt.show()

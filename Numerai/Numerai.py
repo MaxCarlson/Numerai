@@ -1,27 +1,22 @@
-# Ideas
-# Maybe add difference in eras as feature?
-# Add cyclical learning rates
-
-# Train xgboosting and NN's, possibly ensamble
-# then: train a network to look at inputs and choose an output from the ensamble
-# or to take the outputs of the ensambles (possibly plus inputs) and generate a new output!
-
-# Feature Engineering
-# # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Feature Engineering                                         #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Use autoencoder for feature engineering!
 # Try count-encoding, switch feature value to it's respective frequency of occurance in that feature
 # Some sort of feature selection search?
 # Take only the most highly correlated features? Univariate Feature Selection?
 # Mean/Median/etc of feature catagories
 
-#
-# Best ideas
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Best ideas                                                  #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Group datasets by eras. Train on all eras, then perform boosting on more difficult eras
 # (eras with low target correlation)!!!
 # Feature neutralization (try neutralizing on per era basis)
 # Train encoder with custom loss function set to maximize output correlation to target?
 # Boost NN model with scikit-learn AdaBoostRegressor
 # Add NN outputs into input data for XGBoost
+# Train ensamble using feature groups?
 
 # TODO
 # Switch to pd.HDFStore('numera_training_data.h5')
@@ -89,7 +84,7 @@ def loadData(path=DATASET_PATH):
         f for f in training_data.columns if f.startswith("feature")]
     print(f"Loaded {len(o_feature_names)} features")
 
-    #training_data, tournament_data = addFeatures(training_data, tournament_data)
+    training_data, tournament_data = addFeatures(training_data, tournament_data, o_feature_names)
 
     feature_names = [ #['era']+
         f for f in training_data.columns if f.startswith("feature")]
@@ -157,16 +152,17 @@ if __name__ == "__main__":
     #feature_names += ['nnpred']
     #validation_data = tournament_data[tournament_data.data_type == "validation"]
 
-    #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False)
-    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=True)
+    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False)
+    #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=True)
 
     print('Starting Predictions...')
     training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
-    validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
     print('Predictions done...')
 
     #modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
+    validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
+
     applyAnalysis(model, feature_names, validation_data)
 
 
@@ -181,5 +177,5 @@ if __name__ == "__main__":
 
         # Note: we're not looking at feature exposure for new features here?
         validate(training_data, tournament_data, validation_data, 
-                 o_features_names, model, savePreds=True)
+                 o_features_names, model, savePreds=False)
 
