@@ -30,14 +30,21 @@ def norm(df):
 
 
 def interactions(training_data, tournament_data, feature_names):
-    p_features = [['dexterity6', 'charisma63', 'dexterity7', 'wisdom35']]
+    p_features = [['dexterity6', 'charisma63', 'dexterity7', 'wisdom35', 'strength34', 
+                   'wisdom42', 'dexterity11', 'wisdom23', 'intelligence9']]
     p_features = [['feature_' + x for x in l] for l in p_features]
 
-    for features in p_features:
+    
+    for i, features in enumerate(p_features):
         interactions = preprocessing.PolynomialFeatures(degree=2, interaction_only=True, include_bias=False)
         interactions.fit(training_data[features], training_data[TARGET_NAME])
-        train_interactions      = pd.DataFrame(interactions.transform(training_data[features]), index=training_data.index)
-        tournament_interactions = pd.DataFrame(interactions.transform(tournament_data[features]), index=tournament_data.index)
+
+        train_interactions      = interactions.transform(training_data[features])
+        tournament_interactions = interactions.transform(tournament_data[features])
+        new_cols = [f'feature_interaction_{i}_{x}' for x in range(train_interactions.shape[1])]
+
+        train_interactions      = pd.DataFrame(train_interactions, columns=new_cols, index=training_data.index)
+        tournament_interactions = pd.DataFrame(tournament_interactions, columns=new_cols, index=tournament_data.index)
 
         training_data   = pd.concat([training_data, train_interactions],axis=1)
         tournament_data = pd.concat([tournament_data, tournament_interactions],axis=1)
