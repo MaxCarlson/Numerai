@@ -2,7 +2,7 @@ import shap
 import numpy as np
 import pandas as pd
 from defines import *
-from Validation import corrAndStd, graphPerEraCorrSharpe
+from Validation import corrAndStd, graphPerEraCorrSharpe, crossValidation
 
 # Note, we can't drop features here just based on validation data!
 # Need to perform cross validation and look at common drops across all cv sets
@@ -24,7 +24,13 @@ def MDA(model, features, testSet):
         print(col, '{:4f}'.format(corrX-corr))
         diff.append((col, corrX-corr))
         
-    return diff
+    return diff.sort(key=lambda x: x[1])
+
+def crossValidateMDA(model, features_names, training_data, validation_data, fraction=0.15):
+    feature_import = MDA(model, features_names, validation_data)
+    # Take the top fraction features
+    feature_import = feature_import[:int(fraction*len(feature_import))]
+
 
 def applyShap(model, feature_names, dataset):
     # explain the model's predictions using SHAP

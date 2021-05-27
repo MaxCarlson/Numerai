@@ -222,7 +222,7 @@ def crossValidation(model, training_data, feature_names, split=4):
         print(f'Test {i+1}/{split}. vcorr={mean[i]:.3f}, sharpe={sharpe[i]:.3f}, max_down={down[i]:.3f}')
 
     print(f'Final cv results: vcorr={st.mean(mean):.3f}, sharpe={st.mean(sharpe):.3f}, max_down={min(down):.3f}')
-    a=5
+    return st.mean(mean), st.mean(sharpe)
 
 
 

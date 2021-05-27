@@ -122,15 +122,6 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
                   validation_data[feature_names], validation_data[TARGET_NAME])
     return model
 
-def trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False, crossValidate=False):
-    model = EXGBoost(loadModel)
-    if not loadModel:
-        if not crossValidate:
-            model.fit(training_data[feature_names], training_data[TARGET_NAME], 
-                      validation_data[feature_names], validation_data[TARGET_NAME])
-        else:
-            crossValidation(model, training_data, feature_names)
-    return model
 
 if __name__ == "__main__":
     alteredData=False
@@ -142,13 +133,18 @@ if __name__ == "__main__":
 
 
     #gridSearch(training_data, validation_data, feature_names)
+    #model = NNModel('-0.051')
+    model = EXGBoost(loadModel=False)
 
     print('Training Model...')
+    model.fit(training_data[feature_names], training_data[TARGET_NAME], 
+            validation_data[feature_names], validation_data[TARGET_NAME])
+    
+    #crossValidation(model, training_data, feature_names, split=4)
+
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
-    #model = trainModel(training_data, tournament_data, validation_data, feature_names)
-    #model = trainModel(training_data, tournament_data, validation_data, feature_names, '-0.051')
     #tp = model.predict(training_data[feature_names])#, DATASET_PATH)
     #training_data['nnpred'] = tp
     #tp = model.predict(tournament_data[feature_names])#, DATASET_PATH)
@@ -158,7 +154,6 @@ if __name__ == "__main__":
 
     #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False)
     #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=True)
-    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False, crossValidate=True)
 
     print('Starting Predictions...')
     training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
