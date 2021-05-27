@@ -22,6 +22,16 @@ def corrAndStd(df):
 def payout(scores):
     return scores.clip(lower=-0.25, upper=0.25)
 
+def valid_metrics(validation_data):
+    validation_correlations = validation_data.groupby("era").apply(score)
+    validation_sharpe = validation_correlations.mean() / validation_correlations.std(ddof=0)
+    rolling_max = (validation_correlations + 1).cumprod().rolling(window=100, 
+                                                                  min_periods=1).max()
+    daily_value = (validation_correlations + 1).cumprod()
+    max_drawdown = -((rolling_max - daily_value) / rolling_max).max()
+
+    return validation_correlations, validation_sharpe, max_drawdown
+
 def validate(training_data, tournament_data, validation_data, 
              feature_names, model, savePreds=False):
 
@@ -36,20 +46,14 @@ def validate(training_data, tournament_data, validation_data,
 
     """Validation Metrics"""
     # Check the per-era correlations on the validation set (out of sample)
-    validation_correlations = validation_data.groupby("era").apply(score)
+    validation_correlations, validation_sharpe, max_drawdown = valid_metrics(validation_data)
+
     print(f"On validation the correlation has mean {validation_correlations.mean()} and "
           f"std {validation_correlations.std(ddof=0)}")
     print(f"On validation the average per-era payout is {payout(validation_correlations).mean()}")
     
     # Check the "sharpe" ratio on the validation set
-    validation_sharpe = validation_correlations.mean() / validation_correlations.std(ddof=0)
     print(f"Validation Sharpe: {validation_sharpe}")
-
-    print("checking max drawdown...")
-    rolling_max = (validation_correlations + 1).cumprod().rolling(window=100,
-                                                                  min_periods=1).max()
-    daily_value = (validation_correlations + 1).cumprod()
-    max_drawdown = -((rolling_max - daily_value) / rolling_max).max()
     print(f"max drawdown: {max_drawdown}")
 
     # Check the feature exposure of your validation predictions
@@ -187,6 +191,33 @@ def get_feature_neutral_mean(df):
 #################################################################################
 ## User Stuff                                                                  ##
 #################################################################################
+
+from sklearn.model_selection import TimeSeriesSplit
+from copy import deepcopy
+import statistics as st
+
+# TODO: Need to delete overlapping eras from test or training set
+def crossValidation(model, training_data, feature_names, split=2):
+    tss = TimeSeriesSplit(split)
+    mean = []
+    sharpe = []
+    down = []
+    for i, trainidx, testidx in enumerate(tss.split(training_data)):
+        m = deepcopy(model)
+        m.fit(training_data[feature_names].iloc[trainidx].values, 
+              training_data[TARGET_NAME].iloc[trainidx].values, None, None)
+
+        train = training_data[feature_names].iloc[testidx]
+        test = training_data[TARGET_NAME].iloc[testidx]
+
+        train[PREDICTION_NAME] = m.predict(train.values, test.values, None, None)
+        vcorrs, vsharpe, max_down = valid_metrics(test[feature_names].iloc[testidx])
+        mean.append(vcorrs.mean()), sharpe.append(vsharpe), down.append(max_down)
+        print(f'Test {i} of {split}. vcorr={mean[i]:.3f}, sharpe={sharpe[i]:.3f}, max_down={down[i]:.3f}')
+
+    print('Final cv results: vcorr={st.mean(mean):.3f}, sharpe={st.sharpe[i]:.3f}, max_down={st.min(down[i]):.3f}')
+
+
 
 def graphPerEraCorrSharpe(data, multi=0.69, mmc_mult=0.5):
     corrs = data.groupby("era").apply(score)

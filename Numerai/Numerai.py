@@ -34,7 +34,7 @@ from defines import *
 from DataAugment import addFeatures, modifyPreds
 from NNetwork import NNModel
 from Encoder import AutoEncoder
-from Validation import validate, neutralize_series
+from Validation import validate, neutralize_series, crossValidation
 from EXGBoost import EXGBoost
 from GridSearch import gridSearch
 from Analysis import applyAnalysis
@@ -122,11 +122,14 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
                   validation_data[feature_names], validation_data[TARGET_NAME])
     return model
 
-def trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False):
+def trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False, crossValidate=False):
     model = EXGBoost(loadModel)
     if not loadModel:
-        model.fit(training_data[feature_names], training_data[TARGET_NAME], 
-                  validation_data[feature_names], validation_data[TARGET_NAME])
+        if not crossValidate:
+            model.fit(training_data[feature_names], training_data[TARGET_NAME], 
+                      validation_data[feature_names], validation_data[TARGET_NAME])
+        else:
+            crossValidation(model, training_data, feature_names)
     return model
 
 if __name__ == "__main__":
@@ -152,8 +155,9 @@ if __name__ == "__main__":
     #feature_names += ['nnpred']
     #validation_data = tournament_data[tournament_data.data_type == "validation"]
 
-    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False)
+    #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False)
     #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=True)
+    model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False, crossValidate=True)
 
     print('Starting Predictions...')
     training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
