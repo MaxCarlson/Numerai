@@ -34,8 +34,10 @@ def applyShap(model, feature_names, dataset):
 
     # visualize the first prediction's explanation
 
-    shap.plots.waterfall(shap_values[0])
-    shap.plots.beeswarm(shap_values)
+    print(shap_values)
+
+    #shap.plots.waterfall(shap_values[0])
+    shap.plots.beeswarm(shap_values, max_display=30)
 
 
 def applyAnalysis(model, feature_names, dataset):

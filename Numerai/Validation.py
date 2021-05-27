@@ -188,7 +188,7 @@ def get_feature_neutral_mean(df):
 ## User Stuff                                                                  ##
 #################################################################################
 
-def graphPerEraCorrSharpe(data, multi=1, mmc_mult=0.5):
+def graphPerEraCorrSharpe(data, multi=0.69, mmc_mult=0.5):
     corrs = data.groupby("era").apply(score)
     #sharp = corrs.mean() / corrs.std(ddof=0)
     load_example_data(data)
@@ -204,19 +204,22 @@ def graphPerEraCorrSharpe(data, multi=1, mmc_mult=0.5):
         return payout
 
     fig, (ax1, ax3, ax5) = plt.subplots(1, 3)
-    def graph(ax, data, color, xlabel, ylabel):
+    def graph(ax, data, color, xlabel, ylabel, bar=False):
         ax.set_xlabel(xlabel)
-        ax.plot(X, data, color=color)
         ax.set_ylabel(ylabel, color=color)
         ax.tick_params(axis='y', labelcolor=color)
-    
+        if bar:
+            ax.bar(X, data, color=color)
+        else:
+            ax.plot(X, data, color=color)
+
     # Plot correlation and payout by era
-    graph(ax1, corrs, 'tab:blue', 'Era', 'corr')
+    graph(ax1, corrs, 'tab:blue', 'Era', 'corr', True)
     ax2 = ax1.twinx()
     graph(ax2, calcPayouts(1, 0), 'tab:red', 'Era', 'Payout over time')
 
     # Plot mmc and mmc payout by era
-    graph(ax3, mmcs, 'tab:blue', 'Era', 'mmc')
+    graph(ax3, mmcs, 'tab:blue', 'Era', 'mmc', True)
     ax4 = ax3.twinx()
     graph(ax4, calcPayouts(0, 1), 'tab:red', 'Era', 'Payout over time')
 

@@ -163,7 +163,6 @@ if __name__ == "__main__":
     #modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
     validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
 
-    applyAnalysis(model, feature_names, validation_data)
 
 
     # Load non manipulated data for validation purposes
@@ -178,4 +177,6 @@ if __name__ == "__main__":
         # Note: we're not looking at feature exposure for new features here?
         validate(training_data, tournament_data, validation_data, 
                  o_features_names, model, savePreds=False)
+    
+    applyAnalysis(model, feature_names, validation_data)
 

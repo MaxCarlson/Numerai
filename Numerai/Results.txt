@@ -24,6 +24,46 @@ self.model = xgb.XGBRegressor(random_state=1, max_depth=5, objective='reg:square
 	Corr Plus MMC Diff:-0.024624617520140113
 	Corr with example preds: 0.9431059948297097
 
+Added 45 features, all 2nd degree iteractions between features below (top shap features)
+
+['dexterity6', 'charisma63', 'dexterity7', 'wisdom35', 'strength34', 'wisdom42', 'dexterity11', 'wisdom23', 'intelligence9']
+
+	Training Model...
+	Starting Predictions...
+	Predictions done...
+	On training the average per-era payout is 0.24134127470414388
+	On training the correlation has mean 0.25392776099169667 and std 0.026789699941704347
+	On validation the correlation has mean 0.026369675135605942 and std 0.025729099203579436
+	On validation the average per-era payout is 0.026369675135605942
+	Validation Sharpe: 1.0248969436107342
+	checking max drawdown...
+	max drawdown: -0.03177520432501805
+	Max Feature Exposure: 0.26647177730457267
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.018637753184823767
+	calculating MMC stats...
+	MMC Mean: 0.0013707243154103745
+	Corr Plus MMC Sharpe:1.0340009928879137
+	Corr Plus MMC Diff:0.009104049277179449
+	Corr with example preds: 0.9260369549547088
+
+	Neutralized Features @ 0.75
+		On training the average per-era payout is 0.2499757255039052
+		On training the correlation has mean 0.2934014032677554 and std 0.020827885516040152
+		On validation the correlation has mean 0.02387696142113035 and std 0.019926764151122562
+		On validation the average per-era payout is 0.02387696142113035
+		Validation Sharpe: 1.1982357617147417
+		checking max drawdown...
+		max drawdown: -0.02661115326392782
+		Max Feature Exposure: 0.09810825561906279
+		Calculating feature neutral mean...
+		Feature Neutral Mean is 0.01938590860957958
+		calculating MMC stats...
+		MMC Mean: 0.004388250590786755
+		Corr Plus MMC Sharpe:1.084060969346852
+		Corr Plus MMC Diff:-0.11417479236788974
+		Corr with example preds: 0.6830729005035948
+
 
 Added 0 features & feature neutralization
 	Training Model...

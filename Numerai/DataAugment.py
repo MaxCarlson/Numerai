@@ -30,8 +30,18 @@ def norm(df):
 
 
 def interactions(training_data, tournament_data, feature_names):
-    p_features = [['dexterity6', 'charisma63', 'dexterity7', 'wisdom35', 'strength34', 
-                   'wisdom42', 'dexterity11', 'wisdom23', 'intelligence9']]
+    #p_features = [['dexterity6', 'charisma63', 'dexterity7', 'wisdom35', 'strength34', 
+    #               'wisdom42', 'dexterity11', 'wisdom23', 'intelligence9'], 
+    #              ['dexterity4', 'dexterity9', 'charisma85', 'wisdom3', 'strength4', 'intelligence2',
+    #               'dexterity14', 'charisma58', 'strength19', 'intelligence3', 'intelligence4']]
+    
+    # val=0.0279, val_sharp=1.09, draw=-0.029 @ deg=2
+    p_features = [['dexterity6', 'wisdom35', 'charisma63', 'dexterity7', 'intelligence9', 'dexterity9', 'wisdom23',
+                   'dexterity4', 'charisma85', 'dexterity14', 'intelligence4', 'charisma69', 'dexterity12', 'wisdom36']]
+
+    #p_new_features = ['wisdom32', 'constitution63', 'constitution96', 'charisma18', 'charisma54', 'wisdom36',
+    #               'strength34', 'intelligence3', 'wisdom3', 'charisma58', 'constitution38', 'dexterity11']
+    
     p_features = [['feature_' + x for x in l] for l in p_features]
 
     
@@ -80,6 +90,7 @@ def addStatFeatures(data):
         
     return data
 
+# Data augmentation of minority classes via SMOTE
 def applySmote(data, feature_names):
     oversampler = smote.MulticlassOversampling(smote.polynom_fit_SMOTE(random_state=1))
     X, Y = oversampler.sample(data[feature_names], data[TARGET_NAME])
