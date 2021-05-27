@@ -108,7 +108,7 @@ def addFeatures(training_data, tournament_data, feature_names):
     tournament_data = addStatFeatures(tournament_data)
     #training_data = applySmote(training_data, feature_names)
 
-    training_data, tournament_data = interactions(training_data, tournament_data, feature_names)
+    #training_data, tournament_data = interactions(training_data, tournament_data, feature_names)
 
     return training_data, tournament_data
 

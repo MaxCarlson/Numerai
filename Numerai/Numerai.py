@@ -143,6 +143,7 @@ if __name__ == "__main__":
 
     #gridSearch(training_data, validation_data, feature_names)
 
+    print('Training Model...')
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 

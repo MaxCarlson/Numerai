@@ -202,20 +202,26 @@ def crossValidation(model, training_data, feature_names, split=2):
     mean = []
     sharpe = []
     down = []
-    for i, trainidx, testidx in enumerate(tss.split(training_data)):
+    for i, tt in enumerate(tss.split(training_data)):
+        trainidx, testidx = tt
+        train = training_data.iloc[trainidx]
+        test = training_data.iloc[testidx]
+
+        # Make sure no eras overlap!
+        if train['era'].iloc[-1] == test['era'].iloc[0]:
+            eraName = test['era'].iloc[0]
+            test.append(train[train['era'] == eraName])
+            train.drop(train[train['era'] == eraName].index)
+
         m = deepcopy(model)
-        m.fit(training_data[feature_names].iloc[trainidx].values, 
-              training_data[TARGET_NAME].iloc[trainidx].values, None, None)
+        m.fit(train[feature_names].values, train[TARGET_NAME].values, None, None)
 
-        train = training_data[feature_names].iloc[testidx]
-        test = training_data[TARGET_NAME].iloc[testidx]
-
-        train[PREDICTION_NAME] = m.predict(train.values, test.values, None, None)
-        vcorrs, vsharpe, max_down = valid_metrics(test[feature_names].iloc[testidx])
+        test[PREDICTION_NAME] = m.predict(test[feature_names].values)
+        vcorrs, vsharpe, max_down = valid_metrics(test)
         mean.append(vcorrs.mean()), sharpe.append(vsharpe), down.append(max_down)
-        print(f'Test {i} of {split}. vcorr={mean[i]:.3f}, sharpe={sharpe[i]:.3f}, max_down={down[i]:.3f}')
+        print(f'Test {i+1} of {split}. vcorr={mean[i]:.3f}, sharpe={sharpe[i]:.3f}, max_down={down[i]:.3f}')
 
-    print('Final cv results: vcorr={st.mean(mean):.3f}, sharpe={st.sharpe[i]:.3f}, max_down={st.min(down[i]):.3f}')
+    print(f'Final cv results: vcorr={st.mean(mean):.3f}, sharpe={st.mean(sharpe[i]):.3f}, max_down={st.min(down[i]):.3f}')
 
 
 

@@ -16,7 +16,7 @@ class EXGBoost():
             self.model.load_model(Path(MODEL_FILE))
     # TODO: Try early stopping?
     def fit(self, x, y, xv, yv):
-        print('Training Model...')
+        #print('Training Model...')
         self.model.fit(x, y)#, eval_set=[(x, y), (xv, yv)], early_stopping_rounds=1000)
         #self.model.save_model(MODEL_FILE)
 
