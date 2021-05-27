@@ -136,11 +136,12 @@ if __name__ == "__main__":
     #model = NNModel('-0.051')
     model = EXGBoost(loadModel=False)
 
+    crossValidation(model, training_data, feature_names, split=4, neuFactor=0)
+    
     print('Training Model...')
     model.fit(training_data[feature_names], training_data[TARGET_NAME], 
             validation_data[feature_names], validation_data[TARGET_NAME])
     
-    #crossValidation(model, training_data, feature_names, split=4)
 
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')

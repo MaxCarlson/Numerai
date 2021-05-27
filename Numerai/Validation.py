@@ -196,8 +196,11 @@ def get_feature_neutral_mean(df):
 ## User Stuff                                                                  ##
 #################################################################################
 
+from DataAugment import per_era_neutralization
+
 # TODO: Need to delete overlapping eras from test or training set
-def crossValidation(model, training_data, feature_names, split=4):
+def crossValidation(model, training_data, feature_names, split=4, neuFactor=0):
+    print('Starting cross validation....')
     tss = TimeSeriesSplit(split)
     mean = []
     sharpe = []
@@ -211,12 +214,15 @@ def crossValidation(model, training_data, feature_names, split=4):
         if train['era'].iloc[-1] == test['era'].iloc[0]:
             eraName = test['era'].iloc[0]
             test.append(train[train['era'] == eraName])
-            train.drop(train[train['era'] == eraName].index)
+            train.drop(train[train['era'] == eraName].index, inplace=True)
 
         m = deepcopy(model)
         m.fit(train[feature_names].values, train[TARGET_NAME].values, None, None)
 
         test[PREDICTION_NAME] = m.predict(test[feature_names].values)
+        if neuFactor:
+            test[PREDICTION_NAME] = per_era_neutralization(test, feature_names, neuFactor)
+
         vcorrs, vsharpe, max_down = valid_metrics(test)
         mean.append(vcorrs.mean()), sharpe.append(vsharpe), down.append(max_down)
         print(f'Test {i+1}/{split}. vcorr={mean[i]:.3f}, sharpe={sharpe[i]:.3f}, max_down={down[i]:.3f}')
