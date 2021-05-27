@@ -47,6 +47,13 @@ Added 45 features, all 2nd degree iteractions between features below (top shap f
 	Corr Plus MMC Diff:0.009104049277179449
 	Corr with example preds: 0.9260369549547088
 
+	Training Model...
+	Test 1/4. vcorr=0.041, sharpe=1.225, max_down=-0.022
+	Test 2/4. vcorr=0.032, sharpe=0.733, max_down=-0.106
+	Test 3/4. vcorr=0.043, sharpe=1.704, max_down=-0.017
+	Test 4/4. vcorr=0.042, sharpe=1.201, max_down=-0.007
+	Final cv results: vcorr=0.039, sharpe=1.216, max_down=-0.106
+
 	Neutralized Features @ 0.75
 		On training the average per-era payout is 0.2499757255039052
 		On training the correlation has mean 0.2934014032677554 and std 0.020827885516040152

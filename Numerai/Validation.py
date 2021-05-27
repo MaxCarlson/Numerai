@@ -1,8 +1,12 @@
 import sklearn
 import numpy as np
 import pandas as pd
-import matplotlib.patches as mpatches
+import statistics as st
+from copy import deepcopy
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from sklearn.model_selection import TimeSeriesSplit
+
 from defines import *
 
 # Submissions are scored by spearman correlation
@@ -192,12 +196,8 @@ def get_feature_neutral_mean(df):
 ## User Stuff                                                                  ##
 #################################################################################
 
-from sklearn.model_selection import TimeSeriesSplit
-from copy import deepcopy
-import statistics as st
-
 # TODO: Need to delete overlapping eras from test or training set
-def crossValidation(model, training_data, feature_names, split=2):
+def crossValidation(model, training_data, feature_names, split=4):
     tss = TimeSeriesSplit(split)
     mean = []
     sharpe = []
@@ -219,9 +219,10 @@ def crossValidation(model, training_data, feature_names, split=2):
         test[PREDICTION_NAME] = m.predict(test[feature_names].values)
         vcorrs, vsharpe, max_down = valid_metrics(test)
         mean.append(vcorrs.mean()), sharpe.append(vsharpe), down.append(max_down)
-        print(f'Test {i+1} of {split}. vcorr={mean[i]:.3f}, sharpe={sharpe[i]:.3f}, max_down={down[i]:.3f}')
+        print(f'Test {i+1}/{split}. vcorr={mean[i]:.3f}, sharpe={sharpe[i]:.3f}, max_down={down[i]:.3f}')
 
-    print(f'Final cv results: vcorr={st.mean(mean):.3f}, sharpe={st.mean(sharpe[i]):.3f}, max_down={st.min(down[i]):.3f}')
+    print(f'Final cv results: vcorr={st.mean(mean):.3f}, sharpe={st.mean(sharpe):.3f}, max_down={min(down):.3f}')
+    a=5
 
 
 
