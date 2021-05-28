@@ -1,8 +1,7 @@
 
 1. 
 
-Added No Features
-
+Rhodium. 100% FN
 self.model = xgb.XGBRegressor(random_state=1, max_depth=5, objective='reg:squarederror'
                               n_estimators=3000, learning_rate=0.01,#)#, 
                               colsample_bytree=0.25, reg_lambda=1.2, #min_split_loss=10, 
@@ -39,16 +38,37 @@ self.model = xgb.XGBRegressor(random_state=1, max_depth=5, objective='reg:square
 	Final cv results: vcorr=0.022, sharpe=1.208, max_down=-0.025
 
 
-
+MyModel_M1
 Addded 105 features:
     p_features = [['dexterity6', 'wisdom35', 'charisma63', 'dexterity7', 'intelligence9', 'dexterity9', 'wisdom23', 'dexterity4', 'charisma85', 'dexterity14', 'intelligence4', 'charisma69', 'dexterity12', 'wisdom36']]
 
-	Test 1/4. vcorr=0.041, sharpe=1.225, max_down=-0.022
-	Test 2/4. vcorr=0.032, sharpe=0.733, max_down=-0.106
-	Test 3/4. vcorr=0.043, sharpe=1.704, max_down=-0.017
+	Test 1/4. vcorr=0.041, sharpe=1.236, max_down=-0.021
+	Test 2/4. vcorr=0.033, sharpe=0.754, max_down=-0.101
+	Test 3/4. vcorr=0.045, sharpe=1.717, max_down=-0.023
+	Test 4/4. vcorr=0.041, sharpe=1.175, max_down=-0.005
+	Final cv results: vcorr=0.040, sharpe=1.220, max_down=-0.101
 
-	Test 4/4. vcorr=0.042, sharpe=1.201, max_down=-0.007
-	Final cv results: vcorr=0.039, sharpe=1.216, max_down=-0.106
+	FN=0.75
+		On training the average per-era payout is 0.25
+		On training the correlation has mean 0.29877333813593426 and std 0.02069857648023779
+		On validation the correlation has mean 0.02479943733440388 and std 0.017240728356614762
+		On validation the average per-era payout is 0.02479943733440388
+		Validation Sharpe: 1.4384216734607422
+		max drawdown: -0.02956303296728541
+		Max Feature Exposure: 0.09755302706926669
+		Calculating feature neutral mean...
+		Feature Neutral Mean is 0.020226835661318714
+		calculating MMC stats...
+		MMC Mean: 0.005726300185906982
+		Corr Plus MMC Sharpe:1.3630443626357707
+		Corr Plus MMC Diff:-0.07537731082497157
+		Corr with example preds: 0.6525486086580038
+
+		Test 1/4. vcorr=0.030, sharpe=1.070, max_down=-0.007
+		Test 2/4. vcorr=0.026, sharpe=1.003, max_down=-0.055
+		Test 3/4. vcorr=0.030, sharpe=1.387, max_down=-0.019
+		Test 4/4. vcorr=0.035, sharpe=1.669, max_down=-0.001
+		Final cv results: vcorr=0.030, sharpe=1.282, max_down=-0.055
 
 Added 45 features, all 2nd degree iteractions between features below (top shap features)
 

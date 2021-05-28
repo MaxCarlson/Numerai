@@ -15,10 +15,10 @@ class EXGBoost():
         if loadModel:
             self.model.load_model(Path(MODEL_FILE))
     # TODO: Try early stopping?
-    def fit(self, x, y, xv, yv):
-        #print('Training Model...')
+    def fit(self, x, y, xv, yv, saveModel=False):
         self.model.fit(x, y)#, eval_set=[(x, y), (xv, yv)], early_stopping_rounds=1000)
-        #self.model.save_model(MODEL_FILE)
+        if saveModel:
+            self.model.save_model(MODEL_FILE)
 
     def predict(self, x):
         p = self.model.predict(x)

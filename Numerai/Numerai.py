@@ -66,7 +66,7 @@ def read_csv(file_path):
 
 def loadData(path=DATASET_PATH):
 
-    print("Loading data...")
+    print(f"Loading dataset {DATASET_PATH}...")
     if not os.path.isfile(path + "data.h5"):
         print('Saving new dataset as hdf5...')
         training_data = read_csv(path + "numerai_training_data.csv")
@@ -136,11 +136,11 @@ if __name__ == "__main__":
     #model = NNModel('-0.051')
     model = EXGBoost(loadModel=False)
 
-    crossValidation(model, training_data, feature_names, split=4, neuFactor=0)
+    crossValidation(model, training_data, feature_names, split=4, neuFactor=0, plot=True)
     
     print('Training Model...')
     model.fit(training_data[feature_names], training_data[TARGET_NAME], 
-            validation_data[feature_names], validation_data[TARGET_NAME])
+            validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)
     
 
     #runAE(training_data, tournament_data, validation_data, feature_names)
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
     print('Predictions done...')
 
-    #modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
+    modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
     validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
 
 
@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
         # Note: we're not looking at feature exposure for new features here?
         validate(training_data, tournament_data, validation_data, 
-                 o_features_names, model, savePreds=False)
+                 o_features_names, model, savePreds=True)
     
     applyAnalysis(model, feature_names, validation_data)
 

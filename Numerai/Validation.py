@@ -5,6 +5,7 @@ import statistics as st
 from copy import deepcopy
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from DataAugment import per_era_neutralization
 from sklearn.model_selection import TimeSeriesSplit
 
 from defines import *
@@ -196,25 +197,33 @@ def get_feature_neutral_mean(df):
 ## User Stuff                                                                  ##
 #################################################################################
 
-from DataAugment import per_era_neutralization
+# Move data from dFrom to dTo if there is era overlap
+def swapOverlap(dFrom, dTo):
+    cond = dFrom['era'].isin(dTo['era'])
+    if cond.max():
+        return dFrom, dTo
 
-# TODO: Need to delete overlapping eras from test or training set
-def crossValidation(model, training_data, feature_names, split=4, neuFactor=0):
-    print('Starting cross validation....')
-    tss = TimeSeriesSplit(split)
-    mean = []
-    sharpe = []
-    down = []
-    for i, tt in enumerate(tss.split(training_data)):
+    dropped = dFrom.drop(dFrom[cond].index)
+    added = dTo.append(dFrom[cond])
+
+    return dropped, added
+
+def crossValidation(model, training_data, feature_names, split=2, 
+                    neuFactor=0, plot=False, valid_type=TimeSeriesSplit):
+    print(f'Starting cross validation of type {type(valid_type).__name__}...')
+    cv_type = valid_type(split)
+    mean    = []
+    down    = []
+    sharpe  = []
+    data_cumm = pd.DataFrame()
+
+    for i, tt in enumerate(cv_type.split(training_data)):
         trainidx, testidx = tt
         train = training_data.iloc[trainidx]
         test = training_data.iloc[testidx]
 
-        # Make sure no eras overlap!
-        if train['era'].iloc[-1] == test['era'].iloc[0]:
-            eraName = test['era'].iloc[0]
-            test.append(train[train['era'] == eraName])
-            train.drop(train[train['era'] == eraName].index, inplace=True)
+        # Move overlapping eras to the test set
+        train, test = swapOverlap(train, test)
 
         m = deepcopy(model)
         m.fit(train[feature_names].values, train[TARGET_NAME].values, None, None)
@@ -226,59 +235,81 @@ def crossValidation(model, training_data, feature_names, split=4, neuFactor=0):
         vcorrs, vsharpe, max_down = valid_metrics(test)
         mean.append(vcorrs.mean()), sharpe.append(vsharpe), down.append(max_down)
         print(f'Test {i+1}/{split}. vcorr={mean[i]:.3f}, sharpe={sharpe[i]:.3f}, max_down={down[i]:.3f}')
+        
+        if not plot:
+            continue
+        if i == 0:
+            data_cumm = test
+        else:
+            t, data_cumm = swapOverlap(test, data_cumm)
+            data_cumm = data_cumm.append(t)
+
 
     print(f'Final cv results: vcorr={st.mean(mean):.3f}, sharpe={st.mean(sharpe):.3f}, max_down={min(down):.3f}')
+    if plot:
+        graphCorr(data_cumm, name='Cross Validation')
     return st.mean(mean), st.mean(sharpe)
 
 
+def calcPayouts(base_multi, corrs, mmcs, mmc_multi):
+    payout = []
+    base = 1.0
+    for corr, mmc in zip(corrs, mmcs):
+        base += base * base_multi * (corr + mmc * mmc_multi)
+        payout.append(base)
+    return payout
 
-def graphPerEraCorrSharpe(data, multi=0.69, mmc_mult=0.5):
+def graph(ax, X, data, color, xlabel, ylabel, bar=False):
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel, color=color)
+    ax.tick_params(axis='y', labelcolor=color)
+    if bar:
+        ax.bar(X, data, color=color)
+    else:
+        ax.plot(X, data, color=color)
+
+def graphCorr(data, name='', multi=PAYOUT_MULTIPLIER):
     corrs = data.groupby("era").apply(score)
-    #sharp = corrs.mean() / corrs.std(ddof=0)
+    X = [x for x in range(len(corrs))]
+
+    # Plot correlation and payout by era
+    fig, ax1 = plt.subplots(1, 1)
+    graph(ax1, X, corrs, 'tab:blue', 'Era', 'corr', bar=True)
+    ax2 = ax1.twinx()
+    graph(ax2, X, calcPayouts(multi, corrs, [1 for i in corrs], 0), 'tab:red', 'Era', 'Payout over time')
+    ax1.set_title(f'{name} corr/payout, corr_multi={multi}')
+    plt.show()
+
+def graphPerEraCorrMMC(data, multi=PAYOUT_MULTIPLIER, i=1):
+    corrs = data.groupby("era").apply(score)
     load_example_data(data)
     mmcs, corr_scores = mmc_stats(data)
     X = [x for x in range(len(corrs))]
 
-    def calcPayouts(corr_mult, mmc_mult):
-        payout = []
-        base = 1.0
-        for corr, mmc in zip(corrs, mmcs):
-            base += base * multi * (corr + mmc * mmc_mult)
-            payout.append(base)
-        return payout
-
     fig, (ax1, ax3, ax5) = plt.subplots(1, 3)
-    def graph(ax, data, color, xlabel, ylabel, bar=False):
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel, color=color)
-        ax.tick_params(axis='y', labelcolor=color)
-        if bar:
-            ax.bar(X, data, color=color)
-        else:
-            ax.plot(X, data, color=color)
 
     # Plot correlation and payout by era
-    graph(ax1, corrs, 'tab:blue', 'Era', 'corr', True)
+    graph(ax1, X, corrs, 'tab:blue', 'Era', 'corr', True)
     ax2 = ax1.twinx()
-    graph(ax2, calcPayouts(1, 0), 'tab:red', 'Era', 'Payout over time')
+    graph(ax2, X, calcPayouts(multi, corrs, mmcs, 0), 'tab:red', 'Era', 'Payout over time')
 
     # Plot mmc and mmc payout by era
-    graph(ax3, mmcs, 'tab:blue', 'Era', 'mmc', True)
+    graph(ax3, X, mmcs, 'tab:blue', 'Era', 'mmc', True)
     ax4 = ax3.twinx()
-    graph(ax4, calcPayouts(0, 1), 'tab:red', 'Era', 'Payout over time')
+    graph(ax4, X, calcPayouts(0, corrs, mmcs, mmc_multi), 'tab:red', 'Era', 'Payout over time')
 
     # Plot corr+mmc payout
     colormap = np.array(['b', 'g', 'r', 'm'])
     patches = [mpatches.Patch(color=c, label=l) for c,l in zip(
         colormap, ['mmc=0', 'mmc=0.5', 'mmc=1', 'mmc=2'])]
     ax5.legend(handles=patches)
-    graph(ax5, calcPayouts(1, 0), colormap[0],'Era', 'Payout')
-    graph(ax5, calcPayouts(1, 0.5), colormap[1],'Era', 'Payout')
-    graph(ax5, calcPayouts(1, 1), colormap[2], 'Era', 'Payout')
-    graph(ax5, calcPayouts(1, 2), colormap[3], 'Era', 'Payout')
+    graph(ax5, X, calcPayouts(multi, corrs, mmcs, 0), colormap[0],'Era', 'Payout')
+    graph(ax5, X, calcPayouts(multi, corrs, mmcs, 0.5), colormap[1],'Era', 'Payout')
+    graph(ax5, X, calcPayouts(multi, corrs, mmcs, 1), colormap[2], 'Era', 'Payout')
+    graph(ax5, X, calcPayouts(multi, corrs, mmcs, 2), colormap[3], 'Era', 'Payout')
 
     #fig.tight_layout()
-    ax1.set_title(f'corr/payout')
+    ax1.set_title(f'corr/payout corr_multi={multi}')
     ax3.set_title(f'mmc/mmc payout mmc={1}')
-    ax5.set_title(f'mmc+corr payout mmc={mmc_mult}')
+    ax5.set_title(f'mmc+corr payout mmc={mmc_multi}')
     plt.show()

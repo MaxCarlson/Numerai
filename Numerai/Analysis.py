@@ -2,7 +2,7 @@ import shap
 import numpy as np
 import pandas as pd
 from defines import *
-from Validation import corrAndStd, graphPerEraCorrSharpe, crossValidation
+from Validation import corrAndStd, graphPerEraCorrMMC, crossValidation
 
 # Note, we can't drop features here just based on validation data!
 # Need to perform cross validation and look at common drops across all cv sets
@@ -50,6 +50,6 @@ def applyAnalysis(model, feature_names, dataset):
     #MDA(model, feature_names, dataset)
     #applyShap(model, feature_names, dataset)
 
-    graphPerEraCorrSharpe(dataset)
+    graphPerEraCorrMMC(dataset)
 
   
