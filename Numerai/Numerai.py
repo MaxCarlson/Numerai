@@ -64,7 +64,7 @@ def read_csv(file_path):
     df = pd.read_csv(file_path, dtype=dtypes, index_col=0)
     return df
 
-def loadData(path=DATASET_PATH):
+def loadData(path=DATASET_PATH, augment=False):
 
     print(f"Loading dataset {DATASET_PATH}...")
     if not os.path.isfile(path + "data.h5"):
@@ -84,7 +84,8 @@ def loadData(path=DATASET_PATH):
         f for f in training_data.columns if f.startswith("feature")]
     print(f"Loaded {len(o_feature_names)} features")
 
-    training_data, tournament_data = addFeatures(training_data, tournament_data, o_feature_names)
+    if augment:
+        training_data, tournament_data = addFeatures(training_data, tournament_data, o_feature_names)
 
     feature_names = [ #['era']+
         f for f in training_data.columns if f.startswith("feature")]
@@ -125,18 +126,19 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
 
 if __name__ == "__main__":
     alteredData=False
+    augmentData=True
 
     if alteredData:
-        training_data, tournament_data, validation_data, feature_names, o_features_names = loadData('models/aeModels/autoencoder-0.423/')
+        training_data, tournament_data, validation_data, feature_names, o_features_names = loadData(path='models/aeModels/autoencoder-0.423/', augment=augmentData)
     else:
-        training_data, tournament_data, validation_data, feature_names, o_features_names = loadData()
+        training_data, tournament_data, validation_data, feature_names, o_features_names = loadData(augment=augmentData)
 
 
     #gridSearch(training_data, validation_data, feature_names)
     #model = NNModel('-0.051')
     model = EXGBoost(loadModel=False)
 
-    crossValidation(model, training_data, feature_names, split=4, neuFactor=0, plot=True)
+    crossValidation(model, training_data, feature_names, split=4, neuFactor=0.75, plot=True)
     
     print('Training Model...')
     model.fit(training_data[feature_names], training_data[TARGET_NAME], 
