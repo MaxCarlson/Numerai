@@ -23,13 +23,17 @@ def MDA(model, features, testSet):
         corrX, stdX = corrAndStd(testSet)  # compare scores...
         print(col, '{:4f}'.format(corrX-corr))
         diff.append((col, corrX-corr))
-        
-    return diff.sort(key=lambda x: x[1])
-
-def crossValidateMDA(model, features_names, training_data, validation_data, fraction=0.15):
+    diff.sort(key=lambda x: x[1], reverse=True)
+    return diff
+def crossValidateMDA(model, features_names, training_data, validation_data, fraction=0.05, cv_split=4, neutral_v=0.75):
     feature_import = MDA(model, features_names, validation_data)
     # Take the top fraction features
-    feature_import = feature_import[:int(fraction*len(feature_import))]
+    new_feature_names = feature_import[:-int(fraction*len(feature_import))]
+    new_feature_names = [f for f, _ in new_feature_names]
+
+    #model.fit(training_data[new_feature_names], training_data[TARGET_NAME])
+    crossValidation(model, training_data, new_feature_names, split=cv_split, neuFactor=neutral_v, plot=True)
+
 
 
 def applyShap(model, feature_names, dataset):

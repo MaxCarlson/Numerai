@@ -37,7 +37,7 @@ from Encoder import AutoEncoder
 from Validation import validate, neutralize_series, crossValidation
 from EXGBoost import EXGBoost
 from GridSearch import gridSearch
-from Analysis import applyAnalysis
+from Analysis import applyAnalysis, crossValidateMDA
 
 warnings.filterwarnings('ignore')
 
@@ -126,7 +126,11 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
 
 if __name__ == "__main__":
     alteredData=False
-    augmentData=True
+    augmentData=False
+    crossValidate=True
+    crossValaidateMDA_V=True
+    train_model=True
+    neutralize_preds=False
 
     if alteredData:
         training_data, tournament_data, validation_data, feature_names, o_features_names = loadData(path='models/aeModels/autoencoder-0.423/', augment=augmentData)
@@ -138,13 +142,16 @@ if __name__ == "__main__":
     #model = NNModel('-0.051')
     model = EXGBoost(loadModel=False)
 
-    crossValidation(model, training_data, feature_names, split=4, neuFactor=0.75, plot=True)
+    if crossValidate:
+        crossValidation(model, training_data, feature_names, split=4, neuFactor=0.75, plot=True)
     
-    print('Training Model...')
-    model.fit(training_data[feature_names], training_data[TARGET_NAME], 
-            validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)
+    if train_model:
+        print('Training Model...')
+        model.fit(training_data[feature_names], training_data[TARGET_NAME], 
+                validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)
     
-
+    if crossValaidateMDA_V:
+        crossValidateMDA(model, feature_names, training_data, validation_data)
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
@@ -163,7 +170,9 @@ if __name__ == "__main__":
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
     print('Predictions done...')
 
-    modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
+    if neutralize_preds:
+        modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
+
     validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
 
 
