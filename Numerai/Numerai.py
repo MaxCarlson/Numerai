@@ -130,7 +130,7 @@ if __name__ == "__main__":
     crossValidate=True
     crossValaidateMDA_V=True
     train_model=True
-    neutralize_prop = 0.5
+    neutralize_prop = 0.75
     MDA_file_name = 'mda_data'
 
     if alteredData:
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     
     if crossValaidateMDA_V:
         model, feature_names = crossValidateMDA(model, feature_names, training_data, validation_data, 
-                                                mda_frac=0.12, neutral_p=neutralize_prop, filename=MDA_file_name)
+                                                mda_frac=0.15, neutral_p=neutralize_prop, filename=MDA_file_name)
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 

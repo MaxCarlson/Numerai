@@ -34,7 +34,7 @@ def MDA(model, features, testSet, filename=None):
     diff.sort(key=lambda x: x[1])
     if filename:
         with open(filename, 'wb') as fp:
-            pickle.dump(fp)
+            pickle.dump(diff, fp)
 
     return diff
 
