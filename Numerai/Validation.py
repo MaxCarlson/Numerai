@@ -211,7 +211,7 @@ def swapOverlap(dFrom, dTo):
 # Perform cross validation, then predict validation dataset, then graph
 def crossValidation2(model, training_data, validation_data, feature_names, 
                    split=4, neuFactor=0, valid_type=TimeSeriesSplit):
-    results, mean, sharpe = crossValidation(model, training_data, validation_data, feature_names, split, 
+    results, mean, sharpe = crossValidation(model, training_data, feature_names, split, 
                     neuFactor, plot=False, valid_type=valid_type)
     model.fit(training_data[feature_names], training_data[TARGET_NAME])
     validation_data[PREDICTION_NAME] = model.predict(validation_data[feature_names])

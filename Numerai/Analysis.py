@@ -19,6 +19,7 @@ def MDA(model, features, testSet, filename=None):
         try:
             with open(filename, 'rb') as fp:
                 diff = pickle.load(fp)
+                print(f'Loaded file {filename} for MDA')
                 return diff
         except:
             NameError
@@ -66,7 +67,8 @@ def crossValidateMDA(model, features_names, training_data, validation_data,
     new_feature_names = filtered_features[:dropPoint]
     new_feature_names = [f for f, _ in new_feature_names]
 
-    model = crossValidation2(model, training_data, new_feature_names, split=cv_split, neuFactor=neutral_p)
+    model = crossValidation2(model, training_data, validation_data, 
+                             new_feature_names, split=cv_split, neuFactor=neutral_p)
     return model, new_feature_names
 
 

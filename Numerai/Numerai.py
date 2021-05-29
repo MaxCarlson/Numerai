@@ -37,7 +37,7 @@ from Encoder import AutoEncoder
 from Validation import validate, neutralize_series, crossValidation2
 from EXGBoost import EXGBoost
 from GridSearch import gridSearch
-from Analysis import applyAnalysis, crossValidateMDA
+from Analysis import applyAnalysis, crossValidateMDA, interaction_filter
 
 warnings.filterwarnings('ignore')
 
@@ -128,9 +128,9 @@ if __name__ == "__main__":
     save_preds = False
     alteredData=False
     augmentData=True
-    crossValidate=False
+    crossValidate=True
     crossValaidateMDA_V=True
-    neutralize_prop = 0.75
+    neutralize_prop = 0.5
     MDA_file_name = 'mda_data'
 
     if alteredData:
@@ -144,8 +144,8 @@ if __name__ == "__main__":
     model = EXGBoost(loadModel=False)
 
     # Perform corss validation, then train model
-    if crossValidate2:
-        model = crossValidation(model, training_data, feature_names, split=4, neuFactor=neutralize_prop, plot=True)
+    if crossValidate:
+        model = crossValidation2(model, training_data, validation_data, feature_names, split=4, neuFactor=neutralize_prop)
     
     else:
         print('Training Model...')
@@ -154,7 +154,8 @@ if __name__ == "__main__":
     
     if crossValaidateMDA_V:
         model, feature_names = crossValidateMDA(model, feature_names, training_data, validation_data, 
-                                                mda_frac=0.15, neutral_p=neutralize_prop, filename=MDA_file_name)
+                                                mda_frac=0.15, neutral_p=neutralize_prop, 
+                                                filename=MDA_file_name, filter_f=interaction_filter)
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
