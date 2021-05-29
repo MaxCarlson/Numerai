@@ -125,6 +125,7 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
 
 
 if __name__ == "__main__":
+    save_preds = False
     alteredData=False
     augmentData=True
     crossValidate=False
@@ -173,7 +174,7 @@ if __name__ == "__main__":
     validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
 
     validate(training_data, tournament_data, validation_data, 
-             o_features_names, model, savePreds=True)
+             o_features_names, model, savePreds=save_preds)
     
     applyAnalysis(model, feature_names, validation_data)
 

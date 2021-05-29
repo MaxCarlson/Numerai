@@ -5,11 +5,15 @@ import pandas as pd
 from defines import *
 from Validation import corrAndStd, graphPerEraCorrMMC, crossValidation, crossValidation2
 
+def interaction_filter(diffs):
+    iters = [(d, c) for d, c in diffs if d.startswith('feature_interaction')]
+    return iters
+
 # Note, we can't drop features here just based on validation data!
 # Need to perform cross validation and look at common drops across all cv sets
 #
 # Mean Descreas Accuracy
-def MDA(model, features, testSet, filename=None, filter_func=None):
+def MDA(model, features, testSet, filename=None):
 
     if filename:
         try:
@@ -32,8 +36,6 @@ def MDA(model, features, testSet, filename=None, filter_func=None):
         print(col, '{:4f}'.format(corrX-corr))
         diff.append((col, corrX-corr))
     diff.sort(key=lambda x: x[1])
-    if filter_func:
-        diff = filter_func(diff)
 
     if filename:
         with open(filename, 'wb') as fp:
@@ -43,14 +45,25 @@ def MDA(model, features, testSet, filename=None, filter_func=None):
 
 
 def crossValidateMDA(model, features_names, training_data, validation_data, 
-                     mda_frac=0.05, cv_split=4, neutral_p=0.75, filename=None):
+                     mda_frac=0, cv_split=4, neutral_p=0.75, filename=None, filter_f=lambda x: x, drop_above=None):
+    assert(not drop_above or not mda_frac, 'Cannot have both mda_frac and drop_above')
     feature_import = MDA(model, features_names, validation_data, filename)
+
+    filtered_features = filter(filter_f, feature_import)
+
     # Take the top fraction features
     print('Dropped Features:')
-    dropPoint = -int(mda_frac * len(feature_import))
-    print(feature_import[dropPoint:])
+    if mda_drop:
+        dropPoint = -int(mda_frac * len(filtered_features))
+        print(filtered_features[dropPoint:])
 
-    new_feature_names = feature_import[:dropPoint]
+    # Delete features where the model improved by drop_above after removing feature in MDA
+    else:
+        before = set(filtered_features)
+        filtered_features = [(d, c) for d, c in filtered_features if c >= drop_above]
+        print(list(before - set(filtered_features)))
+
+    new_feature_names = filtered_features[:dropPoint]
     new_feature_names = [f for f, _ in new_feature_names]
 
     model = crossValidation2(model, training_data, new_feature_names, split=cv_split, neuFactor=neutral_p)

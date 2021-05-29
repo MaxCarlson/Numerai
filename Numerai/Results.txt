@@ -78,7 +78,7 @@ MyModel_M1
 		Test 3/4. vcorr=0.030, sharpe=1.387, max_down=-0.019
 		Test 4/4. vcorr=0.035, sharpe=1.669, max_down=-0.001
 		Final cv results: vcorr=0.030, sharpe=1.282, max_down=-0.055
-		
+
 		On training the average per-era payout is 0.25
 		On training the correlation has mean 0.29877333813593426 and std 0.02069857648023779
 		On validation the correlation has mean 0.02479943733440388 and std 0.017240728356614762
@@ -93,6 +93,28 @@ MyModel_M1
 		Corr Plus MMC Sharpe:1.3630443626357707
 		Corr Plus MMC Diff:-0.07537731082497157
 		Corr with example preds: 0.6525486086580038
+
+	FN=0.75, MDA=0.15
+		Test 1/4. vcorr=0.029, sharpe=1.272, max_down=-0.012
+		Test 2/4. vcorr=0.024, sharpe=0.927, max_down=-0.071
+		Test 3/4. vcorr=0.029, sharpe=1.292, max_down=-0.009
+		Test 4/4. vcorr=0.031, sharpe=1.775, max_down=-0.010
+		Final cv results: vcorr=0.028, sharpe=1.317, max_down=-0.071
+
+		On training the average per-era payout is 0.25
+		On training the correlation has mean 0.29414856534077966 and std 0.019078305506008957
+		On validation the correlation has mean 0.027450763993603716 and std 0.017842700113756237
+		On validation the average per-era payout is 0.027450763993603716
+		Validation Sharpe: 1.538487102209375
+		max drawdown: -0.01690279162680575
+		Max Feature Exposure: 0.09755663378507662
+		Calculating feature neutral mean...
+		Feature Neutral Mean is 0.02221441431681077
+		calculating MMC stats...
+		MMC Mean: 0.00819836448733524
+		Corr Plus MMC Sharpe:1.4194590297140568
+		Corr Plus MMC Diff:-0.1190280724953181
+		Corr with example preds: 0.6315662908707391
 
 Added 45 features, all 2nd degree iteractions between features below (top shap features)
 
