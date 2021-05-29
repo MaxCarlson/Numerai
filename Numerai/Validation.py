@@ -210,7 +210,7 @@ def swapOverlap(dFrom, dTo):
 
 def crossValidation(model, training_data, feature_names, split=2, 
                     neuFactor=0, plot=False, valid_type=TimeSeriesSplit):
-    print(f'Starting cross validation of type {valid_type.__class__.__name__}...')
+    print(f'Starting cross validation of type {type(valid_type).__name__}...')
     cv_type = valid_type(split)
     mean    = []
     down    = []
@@ -245,9 +245,10 @@ def crossValidation(model, training_data, feature_names, split=2,
             data_cumm = data_cumm.append(t)
 
 
-    print(f'Final cv results: vcorr={st.mean(mean):.3f}, sharpe={st.mean(sharpe):.3f}, max_down={min(down):.3f}')
+    statstr = f'vcorr={st.mean(mean):.3f}, sharpe={st.mean(sharpe):.3f}, max_down={min(down):.3f}'
+    print(f'Final cv results: {statstr}')
     if plot:
-        graphCorr(data_cumm, name='Cross Validation')
+        graphCorr(data_cumm, name=f'Cross Validation, {statstr}\n')
     return st.mean(mean), st.mean(sharpe)
 
 

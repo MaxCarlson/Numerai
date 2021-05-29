@@ -113,7 +113,7 @@ def addFeatures(training_data, tournament_data, feature_names):
     return training_data, tournament_data
 
 
-def modifyPreds(training_data, tournament_data, all_feature_names, f_prop=0.5):
+def modifyPreds(training_data, tournament_data, all_feature_names, neutral_prop=0.5):
     print('Neutralizing Features...')
     training_data[PREDICTION_NAME] = per_era_neutralization(training_data, all_feature_names, f_prop)
     tournament_data[PREDICTION_NAME] = per_era_neutralization(tournament_data, all_feature_names, f_prop)

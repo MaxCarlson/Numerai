@@ -127,10 +127,11 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
 if __name__ == "__main__":
     alteredData=False
     augmentData=False
-    crossValidate=True
+    crossValidate=False
     crossValaidateMDA_V=True
     train_model=True
     neutralize_preds=False
+    neutralize_prop = 0.5
 
     if alteredData:
         training_data, tournament_data, validation_data, feature_names, o_features_names = loadData(path='models/aeModels/autoencoder-0.423/', augment=augmentData)
@@ -143,7 +144,7 @@ if __name__ == "__main__":
     model = EXGBoost(loadModel=False)
 
     if crossValidate:
-        crossValidation(model, training_data, feature_names, split=4, neuFactor=0.75, plot=True)
+        crossValidation(model, training_data, feature_names, split=4, neuFactor=neutralize_prop, plot=True)
     
     if train_model:
         print('Training Model...')
@@ -151,7 +152,8 @@ if __name__ == "__main__":
                 validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)
     
     if crossValaidateMDA_V:
-        crossValidateMDA(model, feature_names, training_data, validation_data)
+        model, feature_names = crossValidateMDA(model, feature_names, training_data, validation_data, 
+                                                fraction=0.05, neutral_p=neutralize_prop)
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
@@ -171,7 +173,7 @@ if __name__ == "__main__":
     print('Predictions done...')
 
     if neutralize_preds:
-        modifyPreds(training_data, tournament_data, feature_names, f_prop=0.75)
+        modifyPreds(training_data, tournament_data, feature_names, neutral_prop=neutralize_prop)
 
     validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
 

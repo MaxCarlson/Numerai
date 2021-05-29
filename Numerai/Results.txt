@@ -39,7 +39,7 @@ self.model = xgb.XGBRegressor(random_state=1, max_depth=5, objective='reg:square
 
 
 MyModel_M1
-Addded 105 features:
+	Addded 105 features: (2nd degree)
     p_features = [['dexterity6', 'wisdom35', 'charisma63', 'dexterity7', 'intelligence9', 'dexterity9', 'wisdom23', 'dexterity4', 'charisma85', 'dexterity14', 'intelligence4', 'charisma69', 'dexterity12', 'wisdom36']]
 
 	Test 1/4. vcorr=0.041, sharpe=1.236, max_down=-0.021
