@@ -21,6 +21,8 @@ class EXGBoost():
             self.model.save_model(MODEL_FILE)
 
     def eraFit(self, x, y, proportion=0.5, trees_per_step=10, num_iters=200):
+        def spearmanr(target, pred):
+            return np.corrcoef(target, pred.rank(pct=True, method="first"))[0, 1]
         features = x.columns
         self.model = XGBRegressor(random_state=1, max_depth=5, learning_rate=0.01, n_estimators=trees_per_step, 
                                   colsample_bytree=0.25, tree_method='gpu_hist', gpu_id=0)

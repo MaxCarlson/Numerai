@@ -3,13 +3,13 @@ import pickle
 import numpy as np
 import pandas as pd
 from defines import *
-from Validation import corrAndStd, graphPerEraCorrMMC, crossValidation
+from Validation import corrAndStd, graphPerEraCorrMMC, crossValidation, crossValidation2
 
 # Note, we can't drop features here just based on validation data!
 # Need to perform cross validation and look at common drops across all cv sets
 #
 # Mean Descreas Accuracy
-def MDA(model, features, testSet, filename=None):
+def MDA(model, features, testSet, filename=None, filter_func=None):
 
     if filename:
         try:
@@ -32,6 +32,9 @@ def MDA(model, features, testSet, filename=None):
         print(col, '{:4f}'.format(corrX-corr))
         diff.append((col, corrX-corr))
     diff.sort(key=lambda x: x[1])
+    if filter_func:
+        diff = filter_func(diff)
+
     if filename:
         with open(filename, 'wb') as fp:
             pickle.dump(diff, fp)
@@ -50,9 +53,7 @@ def crossValidateMDA(model, features_names, training_data, validation_data,
     new_feature_names = feature_import[:dropPoint]
     new_feature_names = [f for f, _ in new_feature_names]
 
-    crossValidation(model, training_data, new_feature_names, split=cv_split, neuFactor=neutral_p, plot=True)
-    print('Fitting model with new features...')
-    model.fit(training_data[new_feature_names], training_data[TARGET_NAME])
+    model = crossValidation2(model, training_data, new_feature_names, split=cv_split, neuFactor=neutral_p)
     return model, new_feature_names
 
 

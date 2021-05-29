@@ -208,9 +208,22 @@ def swapOverlap(dFrom, dTo):
 
     return dropped, added
 
-def crossValidation(model, training_data, feature_names, split=2, 
+# Perform cross validation, then predict validation dataset, then graph
+def crossValidation2(model, training_data, validation_data, feature_names, 
+                   split=4, neuFactor=0, valid_type=TimeSeriesSplit):
+    results, mean, sharpe = crossValidation(model, training_data, validation_data, feature_names, split, 
+                    neuFactor, plot=False, valid_type=valid_type)
+    model.fit(training_data[feature_names], training_data[TARGET_NAME])
+    validation_data[PREDICTION_NAME] = model.predict(validation_data[feature_names])
+    results = results.append(validation_data)
+    graphCorr(results, name=f'Cross Validation + Validation')
+    return model
+
+
+# Perform valid_type cross validation
+def crossValidation(model, training_data, feature_names, split=4, 
                     neuFactor=0, plot=False, valid_type=TimeSeriesSplit):
-    print(f'Starting cross validation of type {type(valid_type).__name__}...')
+    print(f'Starting cross validation of type {valid_type.__name__}...')
     cv_type = valid_type(split)
     mean    = []
     down    = []
@@ -249,7 +262,7 @@ def crossValidation(model, training_data, feature_names, split=2,
     print(f'Final cv results: {statstr}')
     if plot:
         graphCorr(data_cumm, name=f'Cross Validation, {statstr}\n')
-    return st.mean(mean), st.mean(sharpe)
+    return data_cumm, st.mean(mean), st.mean(sharpe)
 
 
 def calcPayouts(base_multi, corrs, mmcs, mmc_multi):

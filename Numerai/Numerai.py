@@ -34,7 +34,7 @@ from defines import *
 from DataAugment import addFeatures, modifyPreds
 from NNetwork import NNModel
 from Encoder import AutoEncoder
-from Validation import validate, neutralize_series, crossValidation
+from Validation import validate, neutralize_series, crossValidation2
 from EXGBoost import EXGBoost
 from GridSearch import gridSearch
 from Analysis import applyAnalysis, crossValidateMDA
@@ -127,9 +127,8 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
 if __name__ == "__main__":
     alteredData=False
     augmentData=True
-    crossValidate=True
+    crossValidate=False
     crossValaidateMDA_V=True
-    train_model=True
     neutralize_prop = 0.75
     MDA_file_name = 'mda_data'
 
@@ -143,10 +142,11 @@ if __name__ == "__main__":
     #model = NNModel('-0.051')
     model = EXGBoost(loadModel=False)
 
-    if crossValidate:
-        crossValidation(model, training_data, feature_names, split=4, neuFactor=neutralize_prop, plot=True)
+    # Perform corss validation, then train model
+    if crossValidate2:
+        model = crossValidation(model, training_data, feature_names, split=4, neuFactor=neutralize_prop, plot=True)
     
-    if train_model:
+    else:
         print('Training Model...')
         model.fit(training_data[feature_names], training_data[TARGET_NAME], 
                 validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)

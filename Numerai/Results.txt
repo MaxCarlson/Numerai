@@ -73,6 +73,12 @@ MyModel_M1
 	Final cv results: vcorr=0.040, sharpe=1.220, max_down=-0.101
 
 	FN=0.75
+		Test 1/4. vcorr=0.030, sharpe=1.070, max_down=-0.007
+		Test 2/4. vcorr=0.026, sharpe=1.003, max_down=-0.055
+		Test 3/4. vcorr=0.030, sharpe=1.387, max_down=-0.019
+		Test 4/4. vcorr=0.035, sharpe=1.669, max_down=-0.001
+		Final cv results: vcorr=0.030, sharpe=1.282, max_down=-0.055
+		
 		On training the average per-era payout is 0.25
 		On training the correlation has mean 0.29877333813593426 and std 0.02069857648023779
 		On validation the correlation has mean 0.02479943733440388 and std 0.017240728356614762
@@ -87,12 +93,6 @@ MyModel_M1
 		Corr Plus MMC Sharpe:1.3630443626357707
 		Corr Plus MMC Diff:-0.07537731082497157
 		Corr with example preds: 0.6525486086580038
-
-		Test 1/4. vcorr=0.030, sharpe=1.070, max_down=-0.007
-		Test 2/4. vcorr=0.026, sharpe=1.003, max_down=-0.055
-		Test 3/4. vcorr=0.030, sharpe=1.387, max_down=-0.019
-		Test 4/4. vcorr=0.035, sharpe=1.669, max_down=-0.001
-		Final cv results: vcorr=0.030, sharpe=1.282, max_down=-0.055
 
 Added 45 features, all 2nd degree iteractions between features below (top shap features)
 
