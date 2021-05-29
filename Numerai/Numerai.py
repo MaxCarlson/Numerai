@@ -128,7 +128,8 @@ if __name__ == "__main__":
     save_preds = False
     alteredData=False
     augmentData=True
-    crossValidate=True
+    trainModel=False
+    crossValidate=False
     crossValaidateMDA_V=True
     neutralize_prop = 0.5
     MDA_file_name = 'mda_data'
@@ -145,17 +146,17 @@ if __name__ == "__main__":
 
     # Perform corss validation, then train model
     if crossValidate:
-        model = crossValidation2(model, training_data, validation_data, feature_names, split=4, neuFactor=neutralize_prop)
+        model = crossValidation2(model, training_data, validation_data, feature_names, split=2, neuFactor=neutralize_prop)
     
-    else:
+    elif trainModel:
         print('Training Model...')
         model.fit(training_data[feature_names], training_data[TARGET_NAME], 
                 validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)
     
     if crossValaidateMDA_V:
         model, feature_names = crossValidateMDA(model, feature_names, training_data, validation_data, 
-                                                mda_frac=0.15, neutral_p=neutralize_prop, 
-                                                filename=MDA_file_name, filter_f=interaction_filter)
+                                                neutral_p=neutralize_prop, filename=MDA_file_name, 
+                                                filter_f=interaction_filter, drop_above=0, mda_frac=None)
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 

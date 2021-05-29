@@ -46,26 +46,28 @@ def MDA(model, features, testSet, filename=None):
 
 
 def crossValidateMDA(model, features_names, training_data, validation_data, 
-                     mda_frac=0, cv_split=4, neutral_p=0.75, filename=None, filter_f=lambda x: x, drop_above=None):
-    assert(not drop_above or not mda_frac, 'Cannot have both mda_frac and drop_above')
+                     cv_split=4, neutral_p=0.75, filename=None, filter_f=lambda x: x, mda_frac=None, drop_above=None):
+    assert((drop_above!=None) ^ (mda_frac!=None), 'Cannot have both mda_frac and drop_above or neither')
     feature_import = MDA(model, features_names, validation_data, filename)
 
-    filtered_features = filter(filter_f, feature_import)
+    print('Starting Cross Validation MDA...')
+    filtered_features = filter_f(feature_import)
 
     # Take the top fraction features
     print('Dropped Features:')
-    if mda_drop:
+    if mda_frac:
         dropPoint = -int(mda_frac * len(filtered_features))
         print(filtered_features[dropPoint:])
+        new_feature_names = filtered_features[:dropPoint]
 
     # Delete features where the model improved by drop_above after removing feature in MDA
     else:
-        before = set(filtered_features)
         filtered_features = [(d, c) for d, c in filtered_features if c >= drop_above]
-        print(list(before - set(filtered_features)))
+        print(filtered_features)
+        new_feature_names = list(set(feature_import) - set(filtered_features))
 
-    new_feature_names = filtered_features[:dropPoint]
     new_feature_names = [f for f, _ in new_feature_names]
+
 
     model = crossValidation2(model, training_data, validation_data, 
                              new_feature_names, split=cv_split, neuFactor=neutral_p)

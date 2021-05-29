@@ -249,8 +249,6 @@ def crossValidation(model, training_data, feature_names, split=4,
         mean.append(vcorrs.mean()), sharpe.append(vsharpe), down.append(max_down)
         print(f'Test {i+1}/{split}. vcorr={mean[i]:.3f}, sharpe={sharpe[i]:.3f}, max_down={down[i]:.3f}')
         
-        if not plot:
-            continue
         if i == 0:
             data_cumm = test
         else:
