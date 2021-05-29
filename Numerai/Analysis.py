@@ -1,4 +1,5 @@
 import shap
+import pickle
 import numpy as np
 import pandas as pd
 from defines import *
@@ -8,13 +9,20 @@ from Validation import corrAndStd, graphPerEraCorrMMC, crossValidation
 # Need to perform cross validation and look at common drops across all cv sets
 #
 # Mean Descreas Accuracy
-def MDA(model, features, testSet):
-    
+def MDA(model, features, testSet, filename=None):
+
+    if filename:
+        try:
+            with open(filename, 'rb') as fp:
+                diff = pickle.load(fp)
+                return diff
+        except:
+            NameError
+
     testSet[PREDICTION_NAME] = model.predict(testSet[features])   # predict with a pre-fitted model on an OOS validation set
     corr, std = corrAndStd(testSet)  # save base scores
     print("Base corr: ", corr)
     diff = []
-    np.random.seed(42)
     for col in features:   # iterate through each features
 
         X = testSet.copy()
@@ -24,18 +32,26 @@ def MDA(model, features, testSet):
         print(col, '{:4f}'.format(corrX-corr))
         diff.append((col, corrX-corr))
     diff.sort(key=lambda x: x[1])
+    if filename:
+        with open(filename, 'wb') as fp:
+            pickle.dump(fp)
+
     return diff
-def crossValidateMDA(model, features_names, training_data, validation_data, fraction=0.05, cv_split=4, neutral_p=0.75):
-    feature_import = MDA(model, features_names, validation_data)
+
+
+def crossValidateMDA(model, features_names, training_data, validation_data, 
+                     mda_frac=0.05, cv_split=4, neutral_p=0.75, filename=None):
+    feature_import = MDA(model, features_names, validation_data, filename)
     # Take the top fraction features
     print('Dropped Features:')
-    dropPoint = -int(fraction*len(feature_import))
+    dropPoint = -int(mda_frac * len(feature_import))
     print(feature_import[dropPoint:])
 
     new_feature_names = feature_import[:dropPoint]
     new_feature_names = [f for f, _ in new_feature_names]
 
     crossValidation(model, training_data, new_feature_names, split=cv_split, neuFactor=neutral_p, plot=True)
+    print('Fitting model with new features...')
     model.fit(training_data[new_feature_names], training_data[TARGET_NAME])
     return model, new_feature_names
 

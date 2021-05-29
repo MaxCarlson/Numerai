@@ -16,3 +16,4 @@ log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
 PAYOUT_MULTIPLIER = 0.69
+np.random.seed(1)

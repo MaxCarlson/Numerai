@@ -297,7 +297,7 @@ def graphPerEraCorrMMC(data, multi=PAYOUT_MULTIPLIER, i=1):
     # Plot mmc and mmc payout by era
     graph(ax3, X, mmcs, 'tab:blue', 'Era', 'mmc', True)
     ax4 = ax3.twinx()
-    graph(ax4, X, calcPayouts(0, corrs, mmcs, mmc_multi), 'tab:red', 'Era', 'Payout over time')
+    graph(ax4, X, calcPayouts(multi, corrs, mmcs, 1), 'tab:red', 'Era', 'Payout over time')
 
     # Plot corr+mmc payout
     colormap = np.array(['b', 'g', 'r', 'm'])
@@ -312,5 +312,5 @@ def graphPerEraCorrMMC(data, multi=PAYOUT_MULTIPLIER, i=1):
     #fig.tight_layout()
     ax1.set_title(f'corr/payout corr_multi={multi}')
     ax3.set_title(f'mmc/mmc payout mmc={1}')
-    ax5.set_title(f'mmc+corr payout mmc={mmc_multi}')
+    ax5.set_title(f'mmc+corr payout mmc={multi}')
     plt.show()

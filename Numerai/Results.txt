@@ -37,6 +37,30 @@ self.model = xgb.XGBRegressor(random_state=1, max_depth=5, objective='reg:square
 	Test 4/4. vcorr=0.030, sharpe=2.008, max_down=-0.000
 	Final cv results: vcorr=0.022, sharpe=1.208, max_down=-0.025
 
+	MDA/CV - Dropping 5% of worst MDA rated features
+	Starting cross validation of type ABCMeta...
+	Test 1/4. vcorr=0.040, sharpe=1.161, max_down=-0.001
+	Test 2/4. vcorr=0.029, sharpe=0.819, max_down=-0.068
+	Test 3/4. vcorr=0.035, sharpe=1.388, max_down=-0.017
+	Test 4/4. vcorr=0.040, sharpe=1.606, max_down=-0.000
+	Final cv results: vcorr=0.036, sharpe=1.244, max_down=-0.068
+	Starting Predictions...
+	Predictions done...
+	On training the average per-era payout is 0.23899017817198645
+	On training the correlation has mean 0.24876931858929555 and std 0.0265783499617556
+	On validation the correlation has mean 0.02779624377783461 and std 0.027208491516166472
+	On validation the average per-era payout is 0.02779624377783461
+	Validation Sharpe: 1.021601795208636
+	max drawdown: -0.025731073222321762
+	Max Feature Exposure: 0.272593527463691
+	Calculating feature neutral mean...
+	Feature Neutral Mean is 0.021085890637570437
+	calculating MMC stats...
+	MMC Mean: 0.0025075864827731184
+	Corr Plus MMC Sharpe:1.0082048250785047
+	Corr Plus MMC Diff:-0.013396970130131303
+	Corr with example preds: 0.9230968950649412
+
 
 MyModel_M1
 	Addded 105 features: (2nd degree)

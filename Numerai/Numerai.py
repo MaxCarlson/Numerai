@@ -126,12 +126,12 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
 
 if __name__ == "__main__":
     alteredData=False
-    augmentData=False
-    crossValidate=False
+    augmentData=True
+    crossValidate=True
     crossValaidateMDA_V=True
     train_model=True
-    neutralize_preds=False
     neutralize_prop = 0.5
+    MDA_file_name = 'mda_data'
 
     if alteredData:
         training_data, tournament_data, validation_data, feature_names, o_features_names = loadData(path='models/aeModels/autoencoder-0.423/', augment=augmentData)
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     
     if crossValaidateMDA_V:
         model, feature_names = crossValidateMDA(model, feature_names, training_data, validation_data, 
-                                                fraction=0.05, neutral_p=neutralize_prop)
+                                                mda_frac=0.12, neutral_p=neutralize_prop, filename=MDA_file_name)
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
@@ -164,33 +164,16 @@ if __name__ == "__main__":
     #feature_names += ['nnpred']
     #validation_data = tournament_data[tournament_data.data_type == "validation"]
 
-    #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=False)
-    #model = trainXGBoost(training_data, tournament_data, validation_data, feature_names, loadModel=True)
-
     print('Starting Predictions...')
     training_data[PREDICTION_NAME] = model.predict(training_data[feature_names])
     tournament_data[PREDICTION_NAME] = model.predict(tournament_data[feature_names])
     print('Predictions done...')
 
-    if neutralize_preds:
-        modifyPreds(training_data, tournament_data, feature_names, neutral_prop=neutralize_prop)
-
+    modifyPreds(training_data, tournament_data, feature_names, neutral_prop=neutralize_prop)
     validation_data[PREDICTION_NAME] = tournament_data[PREDICTION_NAME]
 
-
-
-    # Load non manipulated data for validation purposes
-    if alteredData:
-        pass
-        #atraining_data, atournament_data, validation_data, afeature_names = loadData()
-        #validate(atraining_data, atournament_data, validation_data, 
-        #         afeature_names, model, training_data, tournament_data, 
-        #         feature_names, savePreds=False)
-    else:
-
-        # Note: we're not looking at feature exposure for new features here?
-        validate(training_data, tournament_data, validation_data, 
-                 o_features_names, model, savePreds=True)
+    validate(training_data, tournament_data, validation_data, 
+             o_features_names, model, savePreds=True)
     
     applyAnalysis(model, feature_names, validation_data)
 
