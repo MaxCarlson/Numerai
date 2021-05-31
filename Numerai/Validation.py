@@ -104,6 +104,7 @@ def validate(training_data, tournament_data, validation_data,
 
     if savePreds:
         print('Saving Submissions...')
+        tournament_data[PREDICTION_NAME].clip(lower=0, upper=1, inplace=True)
         tournament_data[PREDICTION_NAME].to_csv("submission.csv", header=True)
 
 def load_example_data(validation_data):

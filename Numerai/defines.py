@@ -9,7 +9,7 @@ PREDICTION_NAME = 'prediction'
 
 DIR = "./data/"
 MODEL_PATH = './models'
-CURRENT_DATASET = "numerai_dataset_265/"
+CURRENT_DATASET = "numerai_dataset_266/"
 DATASET_PATH = DIR + CURRENT_DATASET
 
 log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")

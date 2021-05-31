@@ -1,7 +1,7 @@
 
 1. 
 
-Rhodium. 100% FN
+Rhodium. Active w/ 265=100FN, 266=75FN 
 self.model = xgb.XGBRegressor(random_state=1, max_depth=5, objective='reg:squarederror'
                               n_estimators=3000, learning_rate=0.01,#)#, 
                               colsample_bytree=0.25, reg_lambda=1.2, #min_split_loss=10, 
@@ -72,12 +72,13 @@ MyModel_M1
 	Test 4/4. vcorr=0.041, sharpe=1.175, max_down=-0.005
 	Final cv results: vcorr=0.040, sharpe=1.220, max_down=-0.101
 
+	IN ACTION=Week265
 	FN=0.75
-		Test 1/4. vcorr=0.030, sharpe=1.070, max_down=-0.007
-		Test 2/4. vcorr=0.026, sharpe=1.003, max_down=-0.055
-		Test 3/4. vcorr=0.030, sharpe=1.387, max_down=-0.019
-		Test 4/4. vcorr=0.035, sharpe=1.669, max_down=-0.001
-		Final cv results: vcorr=0.030, sharpe=1.282, max_down=-0.055
+		Test 1/4. vcorr=0.030, sharpe=1.096, max_down=-0.009
+		Test 2/4. vcorr=0.024, sharpe=0.986, max_down=-0.054
+		Test 3/4. vcorr=0.027, sharpe=1.287, max_down=-0.013
+		Test 4/4. vcorr=0.036, sharpe=1.855, max_down=-0.000
+		Final cv results: vcorr=0.029, sharpe=1.306, max_down=-0.054
 
 		On training the average per-era payout is 0.25
 		On training the correlation has mean 0.29877333813593426 and std 0.02069857648023779
@@ -116,27 +117,28 @@ MyModel_M1
 		Corr Plus MMC Diff:-0.1190280724953181
 		Corr with example preds: 0.6315662908707391
 
-	FN=0.5, MDA filter interaction features >= 0 MDA (drop_above=0)
-	Test 1/4. vcorr=0.039, sharpe=1.302, max_down=-0.016
-	Test 2/4. vcorr=0.029, sharpe=0.805, max_down=-0.083
-	Test 3/4. vcorr=0.035, sharpe=1.516, max_down=-0.010
-	Test 4/4. vcorr=0.042, sharpe=1.654, max_down=-0.000
-	Final cv results: vcorr=0.036, sharpe=1.319, max_down=-0.083
+	IN ACTION=Week266
+	FN=0.5, MDA filter interaction features >= -0.0001 MDA (drop_above=0)
+		Test 1/4. vcorr=0.039, sharpe=1.288, max_down=-0.011
+		Test 2/4. vcorr=0.030, sharpe=0.873, max_down=-0.076
+		Test 3/4. vcorr=0.036, sharpe=1.549, max_down=-0.022
+		Test 4/4. vcorr=0.040, sharpe=1.696, max_down=-0.000
+		Final cv results: vcorr=0.036, sharpe=1.351, max_down=-0.076
 
-	On training the average per-era payout is 0.2495531998508075
-	On training the correlation has mean 0.29113667317102965 and std 0.0221003506924836
-	On validation the correlation has mean 0.02747289807106634 and std 0.02238704664516661
-	On validation the average per-era payout is 0.02747289807106634
-	Validation Sharpe: 1.2271783101411358
-	max drawdown: -0.027500948193519968
-	Max Feature Exposure: 0.17482861243112774
-	Calculating feature neutral mean...
-	Feature Neutral Mean is 0.020266646756164134
-	calculating MMC stats...
-	MMC Mean: 0.004656466826032124
-	Corr Plus MMC Sharpe:1.2730360713135622
-	Corr Plus MMC Diff:0.04585776117242646
-	Corr with example preds: 0.8057135751765472
+		On training the average per-era payout is 0.2495435198529895
+		On training the correlation has mean 0.287691055989602 and std 0.022556718543696477
+		On validation the correlation has mean 0.028279170130572257 and std 0.021153896623836217
+		On validation the average per-era payout is 0.028279170130572257
+		Validation Sharpe: 1.3368303075995598
+		max drawdown: -0.025810234967911065
+		Max Feature Exposure: 0.1719327406496076
+		Calculating feature neutral mean...
+		Feature Neutral Mean is 0.02145697929152352
+		calculating MMC stats...
+		MMC Mean: 0.005212199067528199
+		Corr Plus MMC Sharpe:1.4268142858544315
+		Corr Plus MMC Diff:0.0899839782548717
+		Corr with example preds: 0.8083489775748527
 
 Added 45 features, all 2nd degree iteractions between features below (top shap features)
 

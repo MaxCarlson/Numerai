@@ -125,14 +125,15 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
 
 
 if __name__ == "__main__":
-    save_preds = False
-    alteredData=False
-    augmentData=True
-    trainModel=False
-    crossValidate=False
-    crossValaidateMDA_V=True
-    neutralize_prop = 0.5
-    MDA_file_name = 'mda_data'
+    save_preds          = False
+    alteredData         = False
+    augmentData         = False
+    trainModel          = True
+    crossValidate       = False
+    crossValaidateMDA_V = False
+    cv_splits           = 4
+    neutralize_prop     = 0
+    MDA_file_name       = 'mda_data'
 
     if alteredData:
         training_data, tournament_data, validation_data, feature_names, o_features_names = loadData(path='models/aeModels/autoencoder-0.423/', augment=augmentData)
@@ -146,17 +147,18 @@ if __name__ == "__main__":
 
     # Perform corss validation, then train model
     if crossValidate:
-        model = crossValidation2(model, training_data, validation_data, feature_names, split=2, neuFactor=neutralize_prop)
+        model = crossValidation2(model, training_data, validation_data, feature_names, split=cv_splits, neuFactor=neutralize_prop)
     
     elif trainModel:
         print('Training Model...')
-        model.fit(training_data[feature_names], training_data[TARGET_NAME], 
-                validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)
+        #model.fit(training_data[feature_names], training_data[TARGET_NAME], 
+        #        validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)
+        model.eraFit(training_data[feature_names], training_data[TARGET_NAME], training_data['era'])
     
     if crossValaidateMDA_V:
-        model, feature_names = crossValidateMDA(model, feature_names, training_data, validation_data, 
+        model, feature_names = crossValidateMDA(model, feature_names, training_data, validation_data, cv_split=cv_splits,
                                                 neutral_p=neutralize_prop, filename=MDA_file_name, 
-                                                filter_f=interaction_filter, drop_above=0, mda_frac=None)
+                                                filter_f=interaction_filter, drop_above=-0.0001, mda_frac=None)
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 
