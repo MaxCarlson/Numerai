@@ -20,6 +20,7 @@
 
 # TODO
 # Switch to pd.HDFStore('numera_training_data.h5')
+# Try Target Neutralization training!
 
 import os
 import csv
@@ -125,14 +126,15 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
 
 
 if __name__ == "__main__":
-    save_preds          = False
+    save_preds          = True
     alteredData         = False
-    augmentData         = False
+    augmentData         = True
     trainModel          = True
+    eraTrainModel       = False
     crossValidate       = False
     crossValaidateMDA_V = False
     cv_splits           = 4
-    neutralize_prop     = 0
+    neutralize_prop     = 0.75
     MDA_file_name       = 'mda_data'
 
     if alteredData:
@@ -151,9 +153,11 @@ if __name__ == "__main__":
     
     elif trainModel:
         print('Training Model...')
-        #model.fit(training_data[feature_names], training_data[TARGET_NAME], 
-        #        validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)
-        model.eraFit(training_data[feature_names], training_data[TARGET_NAME], training_data['era'])
+        if eraTrainModel:
+            model.eraFit(training_data, validation_data, feature_names)
+        else:
+            model.fit(training_data[feature_names], training_data[TARGET_NAME], 
+                    validation_data[feature_names], validation_data[TARGET_NAME], saveModel=True)
     
     if crossValaidateMDA_V:
         model, feature_names = crossValidateMDA(model, feature_names, training_data, validation_data, cv_split=cv_splits,

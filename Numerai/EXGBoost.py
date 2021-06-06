@@ -3,6 +3,7 @@ from defines import *
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
+from Validation import valid_metrics
 
 THIS_MODEL_PATH = MODEL_PATH + '/xgb/'
 MODEL_FILE = Path(THIS_MODEL_PATH + 'model.xgb')
@@ -23,7 +24,8 @@ class EXGBoost():
         if saveModel:
             self.model.save_model(MODEL_FILE)
 
-    def eraFit(self, x, y, era_col, proportion=0.5, trees_per_step=10, num_iters=100): #default: 0.5, 10, 200
+    def eraFit(self, training_data, validation_data, feature_names,
+               proportion=0.5, trees_per_step=10, num_iters=200): #default: 0.5, 10, 200
         def spearmanr(target, pred):
             return np.corrcoef(target, pred.rank(pct=True, method="first"))[0, 1]
         def ar1(x):
@@ -37,30 +39,52 @@ class EXGBoost():
         def smart_sharpe(x):
             return np.mean(x)/(np.std(x, ddof=1)*autocorr_penalty(x))
 
-        features = x.columns
+        # Era split determines how often we train on all the data
+        # vs just the worst era data
+        eraSplit = 5
+        epochPrint = 1
+        sampling = 0
+
+        # Best so far, proportion = 0.5, eraSplit=5, epochs=24, lr=0.01, depth=5, colsample_bytree=0.1, reg_lambda=1.5, alpha=1, 
+        # erasplit=5 was similar, epochs=33
+        # W/ augment vcorr=0.28 w/0 0.275
+
+
         self.model = xgb.XGBRegressor(random_state=self.rs, max_depth=5, learning_rate=0.01, 
-                                      n_estimators=trees_per_step, colsample_bytree=0.07, 
-                                      reg_lambda=1.5, alpha=1,
-                                      tree_method='gpu_hist', gpu_id=0)
-        self.model.fit(x, y)
-        new_df = x.copy()
-        new_df[TARGET_NAME] = y
-        new_df["era"] = era_col
+                                      n_estimators=trees_per_step, colsample_bytree=0.1, 
+                                      reg_lambda=1.5, alpha=1)#,
+                                      #tree_method='gpu_hist', gpu_id=0)
+
+        plt.ion()
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+        fig.set_size_inches(10, 5.5)
+        l1, = ax1.plot([],[])
+        l2, = ax2.plot([],[])
+        l3, = ax3.plot([],[])
+
+        self.model.fit(training_data[feature_names], training_data[TARGET_NAME])
+        new_df = training_data.copy()
+        new_vf = validation_data.copy()
         for i in range(num_iters):
             print(f"iteration {i}")
             # score each era
-            print("predicting on train")
-            preds = self.model.predict(x)
-            new_df["pred"] = preds
+            #print("predicting on train")
+            new_df[PREDICTION_NAME] = self.model.predict(training_data[feature_names])
             era_scores = pd.Series(index=new_df["era"].unique())
-            print("getting per era scores")
-            for era in new_df["era"].unique():
-                era_df = new_df[new_df["era"] == era]
-                era_scores[era] = spearmanr(era_df["pred"], era_df["target"])
-            era_scores.sort_values(inplace=True)
-            worst_eras = era_scores[era_scores <= era_scores.quantile(proportion)].index
+            if i % eraSplit == 0:
+                print("getting per era scores")
+                for era in new_df["era"].unique():
+                    era_df = new_df[new_df["era"] == era]
+                    era_scores[era] = spearmanr(era_df[PREDICTION_NAME], era_df[TARGET_NAME])
+                era_scores.sort_values(inplace=True)
+                worst_eras = era_scores[era_scores <= era_scores.quantile(proportion)].index
+                worst_df = new_df[new_df["era"].isin(worst_eras)]
+                if sampling:
+                    worst_df = worst_df.append(new_df[new_df['era'].isin(
+                        era_scores[era_scores > era_scores.quantile(proportion)])].sample(frac=sampling))
+            else:
+                worst_df = new_df
             #print(list(worst_eras))
-            worst_df = new_df[new_df["era"].isin(worst_eras)]
             #era_scores.sort_index(inplace=True)
             #era_scores.plot(kind="bar")
             #print("performance over time")
@@ -73,10 +97,29 @@ class EXGBoost():
             #print(np.mean(era_scores)/np.std(era_scores))
             #print("smart sharpe")
             #print(smart_sharpe(era_scores))
-            self.model.n_estimators += trees_per_step
+            self.model.n_estimators += trees_per_step #* (eraSplit if i % eraSplit == 0 else 1)
             booster = self.model.get_booster()
             #print("fitting on worst eras")
-            self.model.fit(worst_df[features], worst_df["target"], xgb_model=booster)
+            self.model.fit(worst_df[feature_names], worst_df[TARGET_NAME], xgb_model=booster)
+
+            if i % epochPrint == 0:
+                new_vf[PREDICTION_NAME] = self.model.predict(new_vf[feature_names])
+                vcorr, vsharpe, vdown = valid_metrics(new_vf)
+                
+                l1.set_xdata(np.append(l1.get_xdata(), i))
+                l2.set_xdata(np.append(l2.get_xdata(), i))
+                l3.set_xdata(np.append(l3.get_xdata(), i))
+                l1.set_ydata(np.append(l1.get_ydata(), vcorr.mean()))
+                l2.set_ydata(np.append(l2.get_ydata(), vsharpe))
+                l3.set_ydata(np.append(l3.get_ydata(), vdown))
+                ax1.relim()
+                ax2.relim()
+                ax3.relim()
+                ax1.autoscale_view()
+                ax2.autoscale_view()
+                ax3.autoscale_view()
+                fig.canvas.draw()
+                fig.canvas.flush_events()
         return self.model
 
     def predict(self, x):
