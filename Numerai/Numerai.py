@@ -28,20 +28,26 @@ import warnings
 import numerapi
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import TimeSeriesSplit, GroupKFold
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
 
+from Validation import *
+#from Validation import validate, neutralize_series, crossValidation2
 from defines import *
 from DataAugment import addFeatures, modifyPreds
 from NNetwork import NNModel
 from Encoder import AutoEncoder
-from Validation import validate, neutralize_series, crossValidation2
 from EXGBoost import EXGBoost
 from GridSearch import gridSearch
-from Analysis import applyAnalysis, crossValidateMDA, interaction_filter
+from Analysis import applyAnalysis, crossValidateMDA, interaction_filter, applyMDA
+from numexpr import MAX_THREADS
+MAX_THREADS = 20
 
 warnings.filterwarnings('ignore')
 
+CURRENT_DATASET = None  
+DATASET_PATH = './Numerai/data/'    
 
 config = ConfigProto()
 config.gpu_options.allow_growth = True
@@ -49,11 +55,15 @@ session = InteractiveSession(config=config)
 #os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+
 NAPI = numerapi.NumerAPI(verbosity="info")
 
-# Download new data
-NAPI.download_current_dataset(dest_path=DIR, unzip=True)
+print(os.path.abspath('./'))
 
+# Download new data
+datasetPath, _  = os.path.splitext(NAPI.download_current_dataset(dest_path=DIR, unzip=True))
+CURRENT_DATASET = os.path.basename(os.path.normpath(datasetPath))
+DATASET_PATH = os.path.join(DIR, CURRENT_DATASET)
 
 # Read the csv file into a pandas Dataframe as float16 to save space
 def read_csv(file_path):
@@ -68,16 +78,16 @@ def read_csv(file_path):
 def loadData(path=DATASET_PATH, augment=False):
 
     print(f"Loading dataset {DATASET_PATH}...")
-    if not os.path.isfile(path + "data.h5"):
+    if not os.path.isfile(os.path.join(path, "data.h5")):
         print('Saving new dataset as hdf5...')
-        training_data = read_csv(path + "numerai_training_data.csv")
-        tournament_data = read_csv(path  + "numerai_tournament_data.csv")
+        training_data = read_csv(os.path.join(path, "numerai_training_data.csv"))
+        tournament_data = read_csv(os.path.join(path, "numerai_tournament_data.csv"))
 
-        training_data.to_hdf(path + "data.h5", key='training')
-        tournament_data.to_hdf(path + "data.h5", key='tournament')
+        training_data.to_hdf(os.path.join(path, "data.h5"), key='training')
+        tournament_data.to_hdf(os.path.join(path, "data.h5"), key='tournament')
     else:
-        training_data = pd.read_hdf(path + 'data.h5', key='training')
-        tournament_data = pd.read_hdf(path + "data.h5", key='tournament')
+        training_data = pd.read_hdf(os.path.join(path, 'data.h5'), key='training')
+        tournament_data = pd.read_hdf(os.path.join(path, "data.h5"), key='tournament')
 
 
     #printCorrelation(training_data)
@@ -124,18 +134,48 @@ def trainModel(training_data, tournament_data, validation_data, feature_names, m
                   validation_data[feature_names], validation_data[TARGET_NAME])
     return model
 
+TrainingSets = {'MDA': {
+    'save_preds':           True,
+    'alteredData':          False,
+    'augmentData':          True,
+    'trainModel':           True,
+    'eraTrainModel':        False,
+    'useMDA':               True,
+    'crossValidate':        False,
+    'crossValaidateMDA_V':  False,
+    'cv_splits':            4,
+    'neutralize_prop':      0.5,
+    'MDA_file_name':        'mda_data',
+    'validationType':       TimeSeriesSplit}, 
+                 'Basic': {
+    'save_preds':           True,
+    'alteredData':          False,
+    'augmentData':          False,
+    'trainModel':           True,
+    'eraTrainModel':        False,
+    'useMDA':               False,
+    'crossValidate':        False,
+    'crossValaidateMDA_V':  False,
+    'cv_splits':            4,
+    'neutralize_prop':      0.5,
+    'MDA_file_name':        'mda_data',
+    'validationType':       TimeSeriesSplit},                 
+    }
+
 
 if __name__ == "__main__":
     save_preds          = True
     alteredData         = False
-    augmentData         = True
+    augmentData         = False
     trainModel          = True
     eraTrainModel       = False
+    useMDA              = False
     crossValidate       = False
     crossValaidateMDA_V = False
     cv_splits           = 4
-    neutralize_prop     = 0.75
+    neutralize_prop     = 0.5
     MDA_file_name       = 'mda_data'
+    validationType      = TimeSeriesSplit #GroupKFold
 
     if alteredData:
         training_data, tournament_data, validation_data, feature_names, o_features_names = loadData(path='models/aeModels/autoencoder-0.423/', augment=augmentData)
@@ -149,9 +189,15 @@ if __name__ == "__main__":
 
     # Perform corss validation, then train model
     if crossValidate:
-        model = crossValidation2(model, training_data, validation_data, feature_names, split=cv_splits, neuFactor=neutralize_prop)
+        model = crossValidation2(model, training_data, validation_data, feature_names, split=cv_splits, 
+                                 neuFactor=neutralize_prop, valid_type=validationType)
     
     elif trainModel:
+        if useMDA:
+            feature_names = applyMDA(model, feature_names, training_data, validation_data, cv_split=cv_splits,
+                     neutral_p=neutralize_prop, filename=MDA_file_name, 
+                     filter_f=interaction_filter, drop_above=-0.0001, mda_frac=None)
+
         print('Training Model...')
         if eraTrainModel:
             model.eraFit(training_data, validation_data, feature_names)
@@ -162,7 +208,9 @@ if __name__ == "__main__":
     if crossValaidateMDA_V:
         model, feature_names = crossValidateMDA(model, feature_names, training_data, validation_data, cv_split=cv_splits,
                                                 neutral_p=neutralize_prop, filename=MDA_file_name, 
-                                                filter_f=interaction_filter, drop_above=-0.0001, mda_frac=None)
+                                                filter_f=interaction_filter, drop_above=-0.0001, mda_frac=None, 
+                                                validation_type=validationType)
+
     #runAE(training_data, tournament_data, validation_data, feature_names)
     #runAE(training_data, tournament_data, validation_data, feature_names, True, '0.423')
 

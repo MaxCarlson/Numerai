@@ -3,7 +3,8 @@ import pickle
 import numpy as np
 import pandas as pd
 from defines import *
-from Validation import corrAndStd, graphPerEraCorrMMC, crossValidation, crossValidation2
+from Validation import *
+#from Validation import corrAndStd, graphPerEraCorrMMC, crossValidation, crossValidation2
 
 def interaction_filter(diffs):
     iters = [(d, c) for d, c in diffs if d.startswith('feature_interaction')]
@@ -13,6 +14,10 @@ def interaction_filter(diffs):
 # Need to perform cross validation and look at common drops across all cv sets
 #
 # Mean Descreas Accuracy
+#
+# TODO: Apply MDA but using sharpe ratio & vcor together so we don't remove feature that prevent losses!
+# TODO: Apply MDA but using sharpe ratio & vcor together so we don't remove feature that prevent losses!
+#
 def MDA(model, features, testSet, filename=None):
 
     if filename:
@@ -44,8 +49,7 @@ def MDA(model, features, testSet, filename=None):
 
     return diff
 
-
-def crossValidateMDA(model, features_names, training_data, validation_data, 
+def applyMDA(model, features_names, training_data, validation_data, 
                      cv_split=4, neutral_p=0.75, filename=None, filter_f=lambda x: x, mda_frac=None, drop_above=None):
     assert((drop_above!=None) ^ (mda_frac!=None), 'Cannot have both mda_frac and drop_above or neither')
     feature_import = MDA(model, features_names, validation_data, filename)
@@ -68,9 +72,17 @@ def crossValidateMDA(model, features_names, training_data, validation_data,
 
     new_feature_names = [f for f, _ in new_feature_names]
 
+    return new_feature_names
 
+
+def crossValidateMDA(model, features_names, training_data, validation_data, validation_type,
+                     cv_split=4, neutral_p=0.75, filename=None, filter_f=lambda x: x, mda_frac=None, 
+                     drop_above=None):
+
+    new_feature_names = applyMDA(model, features_names, training_data, validation_data, cv_split, 
+             neutral_p, filename, filter_f, mda_frac, drop_above)
     model = crossValidation2(model, training_data, validation_data, 
-                             new_feature_names, split=cv_split, neuFactor=neutral_p)
+                             new_feature_names, split=cv_split, neuFactor=neutral_p, valid_type=validation_type)
     return model, new_feature_names
 
 

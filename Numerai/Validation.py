@@ -1,4 +1,4 @@
-import sklearn
+import os 
 import numpy as np
 import pandas as pd
 import statistics as st
@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from DataAugment import per_era_neutralization
 from sklearn.model_selection import TimeSeriesSplit
+from Numerai import DATASET_PATH
 
 from defines import *
 
@@ -69,38 +70,40 @@ def validate(training_data, tournament_data, validation_data,
     max_feature_exposure = max_per_era.mean()
     print(f"Max Feature Exposure: {max_feature_exposure}")
 
-    # Check feature neutral mean
-    print("Calculating feature neutral mean...")
-    feature_neutral_mean = get_feature_neutral_mean(validation_data)
-    print(f"Feature Neutral Mean is {feature_neutral_mean}")
+    if not FAST_MODE:
+        # Check feature neutral mean
+        print("Calculating feature neutral mean...")
+        feature_neutral_mean = get_feature_neutral_mean(validation_data)
+        print(f"Feature Neutral Mean is {feature_neutral_mean}")
 
     # Load example preds to get MMC metrics
     validation_data, validation_example_preds = load_example_data(validation_data)
 
-    print("calculating MMC stats...")
-    # MMC over validation
-    mmc_scores, corr_scores = mmc_stats(validation_data)
+    if not FAST_MODE:
+        print("calculating MMC stats...")
+        # MMC over validation
+        mmc_scores, corr_scores = mmc_stats(validation_data)
 
-    val_mmc_mean = np.mean(mmc_scores)
-    val_mmc_std = np.std(mmc_scores)
-    val_mmc_sharpe = val_mmc_mean / val_mmc_std
-    corr_plus_mmcs = [c + m for c, m in zip(corr_scores, mmc_scores)]
-    corr_plus_mmc_sharpe = np.mean(corr_plus_mmcs) / np.std(corr_plus_mmcs)
-    corr_plus_mmc_mean = np.mean(corr_plus_mmcs)
-    corr_plus_mmc_sharpe_diff = corr_plus_mmc_sharpe - validation_sharpe
+        val_mmc_mean = np.mean(mmc_scores)
+        val_mmc_std = np.std(mmc_scores)
+        val_mmc_sharpe = val_mmc_mean / val_mmc_std
+        corr_plus_mmcs = [c + m for c, m in zip(corr_scores, mmc_scores)]
+        corr_plus_mmc_sharpe = np.mean(corr_plus_mmcs) / np.std(corr_plus_mmcs)
+        corr_plus_mmc_mean = np.mean(corr_plus_mmcs)
+        corr_plus_mmc_sharpe_diff = corr_plus_mmc_sharpe - validation_sharpe
 
-    print(
-        f"MMC Mean: {val_mmc_mean}\n"
-        f"Corr Plus MMC Sharpe:{corr_plus_mmc_sharpe}\n"
-        f"Corr Plus MMC Diff:{corr_plus_mmc_sharpe_diff}"
-    )
+        print(
+            f"MMC Mean: {val_mmc_mean}\n"
+            f"Corr Plus MMC Sharpe:{corr_plus_mmc_sharpe}\n"
+            f"Corr Plus MMC Diff:{corr_plus_mmc_sharpe_diff}"
+        )
 
-    # Check correlation with example predictions
-    full_df = pd.concat([validation_example_preds, validation_data[PREDICTION_NAME], validation_data["era"]], axis=1)
-    full_df.columns = ["example_preds", "prediction", "era"]
-    per_era_corrs = full_df.groupby('era').apply(lambda d: correlation(unif(d["prediction"]), unif(d["example_preds"])))
-    corr_with_example_preds = per_era_corrs.mean()
-    print(f"Corr with example preds: {corr_with_example_preds}")
+        # Check correlation with example predictions
+        full_df = pd.concat([validation_example_preds, validation_data[PREDICTION_NAME], validation_data["era"]], axis=1)
+        full_df.columns = ["example_preds", "prediction", "era"]
+        per_era_corrs = full_df.groupby('era').apply(lambda d: correlation(unif(d["prediction"]), unif(d["example_preds"])))
+        corr_with_example_preds = per_era_corrs.mean()
+        print(f"Corr with example preds: {corr_with_example_preds}")
 
     if savePreds:
         print('Saving Submissions...')
@@ -108,7 +111,7 @@ def validate(training_data, tournament_data, validation_data,
         tournament_data[PREDICTION_NAME].to_csv("submission.csv", header=True)
 
 def load_example_data(validation_data):
-    example_preds = pd.read_csv(DATASET_PATH + "example_predictions.csv").set_index("id")["prediction"]
+    example_preds = pd.read_csv(os.path.join(DATASET_PATH, "example_predictions.csv")).set_index("id")["prediction"]
     validation_example_preds = example_preds.loc[validation_data.index]
     validation_data["ExamplePreds"] = validation_example_preds
     return validation_data, validation_example_preds

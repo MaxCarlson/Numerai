@@ -1,7 +1,8 @@
 
 1. 
 
-Rhodium. Active w/ 265=100FN, 266=75FN 
+Rhodium. Active w/ 265=100FN, 266,267=75FN
+ 
 self.model = xgb.XGBRegressor(random_state=1, max_depth=5, objective='reg:squarederror'
                               n_estimators=3000, learning_rate=0.01,#)#, 
                               colsample_bytree=0.25, reg_lambda=1.2, #min_split_loss=10, 
@@ -62,7 +63,7 @@ self.model = xgb.XGBRegressor(random_state=1, max_depth=5, objective='reg:square
 	Corr with example preds: 0.9230968950649412
 
 
-MyModel_M1
+MyModel_M1, MODEL_M2 = SameModel with col=0.1
 	Addded 105 features: (2nd degree)
     p_features = [['dexterity6', 'wisdom35', 'charisma63', 'dexterity7', 'intelligence9', 'dexterity9', 'wisdom23', 'dexterity4', 'charisma85', 'dexterity14', 'intelligence4', 'charisma69', 'dexterity12', 'wisdom36']]
 
@@ -117,8 +118,8 @@ MyModel_M1
 		Corr Plus MMC Diff:-0.1190280724953181
 		Corr with example preds: 0.6315662908707391
 
-	IN ACTION=Week266
-	FN=0.5, MDA filter interaction features >= -0.0001 MDA (drop_above=0)
+	IN ACTION=Week266,267
+	FN=0.5, MDA filter interaction features >= -0.0001 MDA
 		Test 1/4. vcorr=0.039, sharpe=1.288, max_down=-0.011
 		Test 2/4. vcorr=0.030, sharpe=0.873, max_down=-0.076
 		Test 3/4. vcorr=0.036, sharpe=1.549, max_down=-0.022
@@ -202,3 +203,71 @@ NN Preds
 	Corr Plus MMC Sharpe:0.47730463282079133
 	Corr Plus MMC Diff:-0.10740106449084946
 	Corr with example preds: 0.21774233880741375
+
+
+
+
+
+
+
+
+TEMP TESTS:
+	
+	AugmentedData, col=0.25, FN=0.5 (may only apply to end preds)
+
+		Test 1/4. vcorr=0.036, sharpe=1.212, max_down=-0.005
+		Test 2/4. vcorr=0.029, sharpe=0.855, max_down=-0.077
+		Test 3/4. vcorr=0.035, sharpe=1.524, max_down=-0.016
+		Test 4/4. vcorr=0.041, sharpe=1.533, max_down=-0.000
+		Final cv results: vcorr=0.035, sharpe=1.281, max_down=-0.077
+
+		Starting cross validation of type TimeSeriesSplit...
+		Test 1/4. vcorr=0.039, sharpe=1.609, max_down=-0.000
+		Test 2/4. vcorr=0.028, sharpe=0.751, max_down=-0.082
+		Test 3/4. vcorr=0.039, sharpe=1.588, max_down=-0.017
+		Test 4/4. vcorr=0.040, sharpe=1.617, max_down=-0.000
+		Final cv results: vcorr=0.036, sharpe=1.391, max_down=-0.082
+
+		On training the average per-era payout is 0.24962202929955257
+		On training the correlation has mean 0.288295063716213 and std 0.022050846392692645
+		On validation the correlation has mean 0.028137630327213448 and std 0.021486385866854335
+		On validation the average per-era payout is 0.028137630327213448
+		Validation Sharpe: 1.309556223255748
+		max drawdown: -0.0195330527279325
+		Max Feature Exposure: 0.17559966476372496
+		Calculating feature neutral mean...
+		Feature Neutral Mean is 0.020836917788090995
+		calculating MMC stats...
+		MMC Mean: 0.0051221070497118465
+		Corr Plus MMC Sharpe:1.3940707186400385
+		Corr Plus MMC Diff:0.08451449538429046
+		Corr with example preds: 0.8080563919907202
+	
+	col=0.1
+
+		Test 1/4. vcorr=0.038, sharpe=1.463, max_down=-0.005
+		Test 2/4. vcorr=0.032, sharpe=0.884, max_down=-0.081
+		Test 3/4. vcorr=0.040, sharpe=1.541, max_down=-0.022
+		Test 4/4. vcorr=0.042, sharpe=1.584, max_down=-0.000
+		Final cv results: vcorr=0.038, sharpe=1.368, max_down=-0.081
+
+		Test 1/4. vcorr=0.040, sharpe=1.560, max_down=-0.008
+		Test 2/4. vcorr=0.030, sharpe=0.815, max_down=-0.083
+		Test 3/4. vcorr=0.039, sharpe=1.492, max_down=-0.013
+		Test 4/4. vcorr=0.041, sharpe=1.723, max_down=-0.000
+		Final cv results: vcorr=0.038, sharpe=1.398, max_down=-0.083
+
+		On training the average per-era payout is 0.24707776547518848
+		On training the correlation has mean 0.26761741520447574 and std 0.022913214071075348
+		On validation the correlation has mean 0.028162755195657956 and std 0.021659930988029607
+		On validation the average per-era payout is 0.028162755195657956
+		Validation Sharpe: 1.3002236808243823
+		max drawdown: -0.019152011048131617
+		Max Feature Exposure: 0.1781288286866913
+		Calculating feature neutral mean...
+		Feature Neutral Mean is 0.021032532888450674
+		calculating MMC stats...
+		MMC Mean: 0.0045219481594788585
+		Corr Plus MMC Sharpe:1.4406392894387625
+		Corr Plus MMC Diff:0.14041560861438018
+		Corr with example preds: 0.8388831991874156
