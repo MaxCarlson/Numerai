@@ -162,8 +162,12 @@ TrainingSets = {'MDA': {
     'validationType':       TimeSeriesSplit},                 
     }
 
+#SetToUse = 'Rhodium'
+#SetToUse = 'M1'
+#SetToUse = 'M2'
 
-if __name__ == "__main__":
+
+if SetToUse == 'Rhodium':
     save_preds          = True
     alteredData         = False
     augmentData         = False
@@ -176,6 +180,38 @@ if __name__ == "__main__":
     neutralize_prop     = 0.5
     MDA_file_name       = 'mda_data'
     validationType      = TimeSeriesSplit #GroupKFold
+    colsample_bytree    = 0.25
+elif SetToUse == 'M1':
+    save_preds          = True
+    alteredData         = False
+    augmentData         = True
+    trainModel          = True
+    eraTrainModel       = False
+    useMDA              = False
+    crossValidate       = False
+    crossValaidateMDA_V = False
+    cv_splits           = 4
+    neutralize_prop     = 0.5
+    MDA_file_name       = 'mda_data'
+    validationType      = TimeSeriesSplit #GroupKFold
+    colsample_bytree    = 0.25
+elif SetToUse == 'M2':
+    save_preds          = True
+    alteredData         = False
+    augmentData         = True
+    trainModel          = True
+    eraTrainModel       = False
+    useMDA              = False
+    crossValidate       = False
+    crossValaidateMDA_V = False
+    cv_splits           = 4
+    neutralize_prop     = 0.5
+    MDA_file_name       = 'mda_data'
+    validationType      = TimeSeriesSplit #GroupKFold
+    colsample_bytree    = 0.1
+
+if __name__ == "__main__":
+
 
     if alteredData:
         training_data, tournament_data, validation_data, feature_names, o_features_names = loadData(path='models/aeModels/autoencoder-0.423/', augment=augmentData)
@@ -185,7 +221,7 @@ if __name__ == "__main__":
 
     #gridSearch(training_data, validation_data, feature_names)
     #model = NNModel('-0.051')
-    model = EXGBoost(loadModel=False)
+    model = EXGBoost(loadModel=False, colsample_bytree=colsample_bytree)
 
     # Perform corss validation, then train model
     if crossValidate:

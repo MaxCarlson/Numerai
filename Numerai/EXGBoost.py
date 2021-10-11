@@ -10,14 +10,14 @@ MODEL_FILE = Path(THIS_MODEL_PATH + 'model.xgb')
 
 class EXGBoost():
     rs = 1
-    def __init__(self, loadModel):
+    def __init__(self, loadModel, colsample_bytree=0.25):
         self.model = xgb.XGBRegressor(random_state=self.rs, max_depth=5, objective='reg:squarederror',
                         #sampling_method='uniform', subsample=0.75,
                         n_estimators=3000, learning_rate=0.01,
 
 
 
-                        colsample_bytree=0.25, reg_lambda=1.2, alpha=0, #gamma=0.01, 
+                        colsample_bytree=colsample_bytree, reg_lambda=1.2, alpha=0, #gamma=0.01, 
                         tree_method='gpu_hist', gpu_id=0)
         if loadModel:
             self.model.load_model(Path(MODEL_FILE))
