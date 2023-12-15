@@ -13,7 +13,7 @@ def interaction_filter(diffs):
 # Note, we can't drop features here just based on validation data!
 # Need to perform cross validation and look at common drops across all cv sets
 #
-# Mean Descreas Accuracy
+# Mean Decrease Accuracy
 #
 # TODO: Apply MDA but using sharpe ratio & vcor together so we don't remove feature that prevent losses!
 # TODO: Apply MDA but using sharpe ratio & vcor together so we don't remove feature that prevent losses!
